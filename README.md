@@ -1,62 +1,116 @@
-# semsim
+# SemSim - Self-Contained Sentence Similarity API
 
-This project uses Quarkus, the Supersonic Subatomic Java Framework.
+This Quarkus application provides a self-contained Sentence Similarity API that processes XML documents, extracts sentences, generates vector embeddings, and groups similar sentences based on cosine similarity.
 
-If you want to learn more about Quarkus, please visit its website: <https://quarkus.io/>.
+## Features
 
-## Running the application in dev mode
+- **XML Document Processing**: Parse XML documents to extract text content.
+- **Sentence Vectorization**: Convert sentences into vector embeddings using a DL4J-based model.
+- **In-Memory Vector Storage**: Store vectors and text in-memory for fast processing.
+- **Similarity Grouping**: Group sentences that exceed a defined similarity threshold.
+- **Session Management**: Manage user sessions for asynchronous processing and result retrieval.
+- **Health Checks**: Includes readiness probes for container orchestration.
 
-You can run your application in dev mode that enables live coding using:
+## Running the application
 
-```shell script
-./mvnw quarkus:dev
+### Development Mode
+
+```shell
+./mvnw compile quarkus:dev
 ```
 
-> **_NOTE:_**  Quarkus now ships with a Dev UI, which is available in dev mode only at <http://localhost:8080/q/dev/>.
+This enables hot reload and live coding. The application will be accessible at http://localhost:8080.
 
-## Packaging and running the application
+### Packaging and Running in JVM Mode
 
-The application can be packaged using:
-
-```shell script
+```shell
 ./mvnw package
+java -jar target/quarkus-app/quarkus-run.jar
 ```
 
-It produces the `quarkus-run.jar` file in the `target/quarkus-app/` directory.
-Be aware that it’s not an _über-jar_ as the dependencies are copied into the `target/quarkus-app/lib/` directory.
+### Creating a Docker Container
 
-The application is now runnable using `java -jar target/quarkus-app/quarkus-run.jar`.
-
-If you want to build an _über-jar_, execute the following command:
-
-```shell script
-./mvnw package -Dquarkus.package.jar.type=uber-jar
+```shell
+./mvnw package
+docker build -f src/main/docker/Dockerfile.jvm -t quarkus/semsim-jvm .
+docker run -i --rm -p 8080:8080 quarkus/semsim-jvm
 ```
 
-The application, packaged as an _über-jar_, is now runnable using `java -jar target/*-runner.jar`.
+## Configuration
 
-## Creating a native executable
+Key configuration parameters in `application.properties`:
 
-You can create a native executable using:
+- `semsim.similarity.threshold`: The cosine similarity threshold for grouping (default: 0.75)
+- `semsim.session.timeout.minutes`: Session timeout in minutes (default: 60)
 
-```shell script
-./mvnw package -Dnative
+## API Endpoints
+
+### Submit XML for Processing
+
+```
+POST /api/similarity
+Content-Type: application/xml
+
+<xml>Your XML content here</xml>
 ```
 
-Or, if you don't have GraalVM installed, you can run the native executable build in a container using:
+**Response**: 
+- Status: 202 Accepted
+- Sets a session cookie: `session_id`
+- JSON body with a message and session ID.
 
-```shell script
-./mvnw package -Dnative -Dquarkus.native.container-build=true
+### Retrieve Results
+
+```
+GET /api/similarity/results
+Cookie: session_id=your-session-id
 ```
 
-You can then execute your native executable with: `./target/semsim-1.0.0-SNAPSHOT-runner`
+**Response**:
+- Status: 200 OK
+- JSON array of sentence groups: `[["sentence 1", "sentence 2"], ["sentence 3", "sentence 4"]]`
 
-If you want to learn more about building native executables, please consult <https://quarkus.io/guides/maven-tooling>.
+## Health Checks
 
-## Provided Code
+The application provides a health check endpoint at `/q/health/ready`.
 
-### REST
+## Testing
 
-Easily start your REST Web Services
+### Sample XML
 
-[Related guide section...](https://quarkus.io/guides/getting-started-reactive#reactive-jax-rs-resources)
+Here's a simple XML document you can use for testing:
+
+```xml
+<document>
+    <title>Sample Document</title>
+    <content>
+        <paragraph>
+            This is a test paragraph. It contains several sentences.
+            Some sentences are similar to each other. Similar sentences should be grouped together.
+        </paragraph>
+        <paragraph>
+            This test paragraph has sentences. Sentences that are similar should be placed in groups.
+            Completely different sentences like this one should be separate.
+        </paragraph>
+    </content>
+</document>
+```
+
+### Using cURL
+
+```shell
+# Submit XML for processing
+curl -X POST -H "Content-Type: application/xml" \
+  -d @sample.xml \
+  -c cookies.txt \
+  http://localhost:8080/api/similarity
+
+# Retrieve results
+curl -X GET -b cookies.txt http://localhost:8080/api/similarity/results
+```
+
+## Implementation Notes
+
+- This is a simplified implementation that uses a mock embedding model for demonstration purposes.
+- In a production environment, you would integrate a pre-trained sentence transformer model.
+- For large XML documents, consider implementing pagination or limiting the number of sentences processed.

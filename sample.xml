@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<document>
+	<title>Sample Document for Similarity Testing</title>
+	<content>
+		<paragraph>
+            This is a test paragraph. It contains several sentences.
+            Some sentences are similar to each other. Similar sentences should be grouped together.
+            This paragraph demonstrates how the similarity service works.
+		</paragraph>
+		<paragraph>
+            This test paragraph has sentences. Sentences that are similar should be placed in groups.
+            Completely different sentences like this one should be separate.
+            The similarity algorithm works by calculating cosine similarity between sentence embeddings.
+		</paragraph>
+		<paragraph>
+            This is another test paragraph. It also contains several sentences.
+            Sentences in this paragraph might be similar to those in other paragraphs.
+            The application processes XML documents and extracts all text content.
+            Extracted text is split into sentences using a simple pattern.
+		</paragraph>
+		<paragraph>
+            The similarity service performs several steps. First, it extracts sentences from XML.
+            Then, each sentence is converted to a vector embedding.
+            Similar sentences are grouped based on a configurable similarity threshold.
+            Results are stored in-memory and associated with a session ID.
+		</paragraph>
+		<paragraph>
+            XML processing works by recursively traversing the document tree.
+            Text nodes are extracted and combined into a single string.
+            The string is then split into individual sentences.
+            Each sentence is processed independently.
+		</paragraph>
+	</content>
+</document> 
