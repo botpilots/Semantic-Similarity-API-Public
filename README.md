@@ -6,7 +6,7 @@ A Quarkus-based REST API for processing XML documents and identifying groups of 
 
 - **XML Processing**: Extract sentences from XML documents
 - **XPath Support**: Target specific elements in XML documents using XPath expressions
-- **Sentence Vectorization**: Convert sentences to vector embeddings using all-MiniLM-L6-v2 ONNX model
+- **Sentence Vectorization**: Convert sentences to vector embeddings
 - **Similarity Analysis**: Group similar sentences based on cosine similarity
 - **Asynchronous Processing**: Process documents asynchronously with session-based result retrieval
 
@@ -14,7 +14,7 @@ A Quarkus-based REST API for processing XML documents and identifying groups of 
 
 ### Prerequisites
 
-- Java 17 or higher
+- Java 11 or higher
 - Maven 3.8.1 or higher
 
 ### Running the Application

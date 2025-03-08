@@ -47,8 +47,6 @@ public class SimilarityService {
 			similarSentences.add(currentSentence.getText());
 			processedIndices.add(i);
 
-			LOG.info("Processing sentence: \"" + truncateText(currentSentence.getText()) + "\"");
-
 			// Find similar sentences
 			for (int j = 0; j < sentences.size(); j++) {
 				if (i == j || processedIndices.contains(j)) {
@@ -59,30 +57,18 @@ public class SimilarityService {
 				double similarity = embeddingService.calculateCosineSimilarity(
 						currentSentence.getVector(), candidateSentence.getVector());
 
-				// Log all similarity scores
-				LOG.info("Similarity: " + String.format("%.4f", similarity) +
-						" | Threshold: " + String.format("%.4f", similarityThreshold) +
-						" | \"" + truncateText(currentSentence.getText()) +
-						"\" and \"" + truncateText(candidateSentence.getText()) + "\"");
-
 				if (similarity >= similarityThreshold) {
 					similarSentences.add(candidateSentence.getText());
 					processedIndices.add(j);
-					LOG.info("MATCH FOUND with similarity " + String.format("%.4f", similarity) + ": \"" +
-							truncateText(currentSentence.getText()) + "\" and \"" +
-							truncateText(candidateSentence.getText()) + "\"");
+					LOG.debug("Found similar sentences with similarity " + similarity + ": " +
+							truncateText(currentSentence.getText()) + " and " +
+							truncateText(candidateSentence.getText()));
 				}
 			}
 
 			// Only add groups with more than one sentence
 			if (similarSentences.size() > 1) {
-				LOG.info("Creating group with " + similarSentences.size() + " sentences:");
-				for (String sentence : similarSentences) {
-					LOG.info("  - \"" + truncateText(sentence) + "\"");
-				}
 				groups.add(similarSentences);
-			} else {
-				LOG.info("No similar sentences found for: \"" + truncateText(currentSentence.getText()) + "\"");
 			}
 		}
 
@@ -94,7 +80,7 @@ public class SimilarityService {
 	 * Truncate text for logging purposes.
 	 */
 	private String truncateText(String text) {
-		int maxLength = 40;
+		int maxLength = 20;
 		if (text.length() <= maxLength) {
 			return text;
 		}
