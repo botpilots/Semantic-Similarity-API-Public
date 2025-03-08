@@ -44,6 +44,22 @@ public class SimilarityResource {
 						.build();
 			}
 
+			// Validate XML before processing
+			try {
+				// Create a DocumentBuilderFactory
+				javax.xml.parsers.DocumentBuilderFactory factory = javax.xml.parsers.DocumentBuilderFactory
+						.newInstance();
+				// Create a DocumentBuilder
+				javax.xml.parsers.DocumentBuilder builder = factory.newDocumentBuilder();
+				// Parse the XML
+				builder.parse(new java.io.ByteArrayInputStream(xmlContent.getBytes()));
+			} catch (Exception e) {
+				LOG.warn("Invalid XML content: " + e.getMessage());
+				return Response.status(Response.Status.INTERNAL_SERVER_ERROR)
+						.entity(new ApiResponse("Error processing request.", "Invalid XML: " + e.getMessage(), null))
+						.build();
+			}
+
 			// Start processing and get a session ID
 			String sessionId = similarityProcessingService.startProcessing(xmlContent);
 
