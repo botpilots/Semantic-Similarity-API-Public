@@ -34,8 +34,31 @@ public class SimilarityResource {
 	@Consumes(MediaType.APPLICATION_XML)
 	@Produces(MediaType.APPLICATION_JSON)
 	public Response processXml(String xmlContent) {
+		return processXml(xmlContent, null);
+	}
+
+	/**
+	 * Submit an XML document for processing with a specific XPath expression.
+	 * 
+	 * @param xmlContent The XML content to process
+	 * @param xpath      The XPath expression to select elements for text extraction
+	 *                   (optional)
+	 * @return Response with a session cookie
+	 */
+	@POST
+	@Path("/xpath")
+	@Consumes(MediaType.APPLICATION_XML)
+	@Produces(MediaType.APPLICATION_JSON)
+	public Response processXmlWithXPath(String xmlContent, @QueryParam("xpath") String xpath) {
+		return processXml(xmlContent, xpath);
+	}
+
+	/**
+	 * Internal method to process XML with optional XPath.
+	 */
+	private Response processXml(String xmlContent, String xpath) {
 		try {
-			LOG.info("Received XML document for processing");
+			LOG.info("Received XML document for processing" + (xpath != null ? " with XPath: " + xpath : ""));
 
 			if (xmlContent == null || xmlContent.trim().isEmpty()) {
 				LOG.warn("Received empty XML content");
@@ -61,7 +84,7 @@ public class SimilarityResource {
 			}
 
 			// Start processing and get a session ID
-			String sessionId = similarityProcessingService.startProcessing(xmlContent);
+			String sessionId = similarityProcessingService.startProcessing(xmlContent, xpath);
 
 			// Create session cookie
 			NewCookie sessionCookie = new NewCookie.Builder(SESSION_COOKIE_NAME)

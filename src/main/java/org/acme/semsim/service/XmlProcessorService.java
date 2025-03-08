@@ -11,6 +11,10 @@ import org.xml.sax.SAXException;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
+import javax.xml.xpath.XPath;
+import javax.xml.xpath.XPathConstants;
+import javax.xml.xpath.XPathExpressionException;
+import javax.xml.xpath.XPathFactory;
 import java.io.IOException;
 import java.io.StringReader;
 import java.util.ArrayList;
@@ -31,6 +35,9 @@ public class XmlProcessorService {
 	// followed by a space and an uppercase letter
 	private static final Pattern SENTENCE_PATTERN = Pattern.compile("([.!?])\\s+([A-Z])");
 
+	// Default XPath expression to select all elements
+	private static final String DEFAULT_XPATH = "self::*";
+
 	/**
 	 * Parses an XML document and extracts all text contents.
 	 * 
@@ -39,8 +46,22 @@ public class XmlProcessorService {
 	 * @throws Exception if XML parsing fails
 	 */
 	public List<String> extractSentencesFromXml(String xmlContent) throws Exception {
-		LOG.debug("Processing XML document");
-		String extractedText = extractTextFromXml(xmlContent);
+		return extractSentencesFromXml(xmlContent, DEFAULT_XPATH);
+	}
+
+	/**
+	 * Parses an XML document and extracts text contents based on the provided XPath
+	 * expression.
+	 * 
+	 * @param xmlContent      The XML document as a string
+	 * @param xpathExpression The XPath expression to select elements for text
+	 *                        extraction
+	 * @return List of extracted sentences
+	 * @throws Exception if XML parsing or XPath evaluation fails
+	 */
+	public List<String> extractSentencesFromXml(String xmlContent, String xpathExpression) throws Exception {
+		LOG.debug("Processing XML document with XPath: " + xpathExpression);
+		String extractedText = extractTextFromXml(xmlContent, xpathExpression);
 		LOG.debug("Extracted text length: " + extractedText.length());
 
 		return splitIntoSentences(extractedText);
@@ -50,7 +71,16 @@ public class XmlProcessorService {
 	 * Extracts all text content from XML nodes.
 	 */
 	private String extractTextFromXml(String xmlContent)
-			throws ParserConfigurationException, IOException, SAXException {
+			throws ParserConfigurationException, IOException, SAXException, XPathExpressionException {
+		return extractTextFromXml(xmlContent, DEFAULT_XPATH);
+	}
+
+	/**
+	 * Extracts text content from XML nodes that match the provided XPath
+	 * expression.
+	 */
+	private String extractTextFromXml(String xmlContent, String xpathExpression)
+			throws ParserConfigurationException, IOException, SAXException, XPathExpressionException {
 		DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
 		factory.setFeature("http://apache.org/xml/features/disallow-doctype-decl", true);
 		factory.setFeature("http://xml.org/sax/features/external-general-entities", false);
@@ -60,7 +90,23 @@ public class XmlProcessorService {
 		Document document = builder.parse(new InputSource(new StringReader(xmlContent)));
 
 		StringBuilder textContent = new StringBuilder();
-		extractTextFromNode(document.getDocumentElement(), textContent);
+
+		// If using default XPath, use the original method for backward compatibility
+		if (DEFAULT_XPATH.equals(xpathExpression)) {
+			extractTextFromNode(document.getDocumentElement(), textContent);
+		} else {
+			// Use XPath to select nodes
+			XPath xpath = XPathFactory.newInstance().newXPath();
+			NodeList matchingNodes = (NodeList) xpath.evaluate(xpathExpression, document, XPathConstants.NODESET);
+
+			LOG.debug("XPath expression matched " + matchingNodes.getLength() + " nodes");
+
+			// Extract text from each matching node
+			for (int i = 0; i < matchingNodes.getLength(); i++) {
+				Node node = matchingNodes.item(i);
+				extractTextFromNode(node, textContent);
+			}
+		}
 
 		return textContent.toString().trim();
 	}

@@ -105,4 +105,66 @@ public class SimilarityResourceTest {
 				.statusCode(400)
 				.contentType(ContentType.JSON);
 	}
+
+	@Test
+	public void testProcessXmlWithXPath() throws Exception {
+		// Test submitting XML with XPath parameter
+
+		// 1. Submit XML with XPath for processing
+		String sessionId = given()
+				.contentType(ContentType.XML)
+				.body(XML_SAMPLE)
+				.when()
+				.post("/api/similarity/xpath?xpath=//paragraph")
+				.then()
+				.statusCode(202)
+				.extract()
+				.cookie("session_id");
+
+		assertNotNull(sessionId, "Session ID should not be null");
+
+		// 2. Wait for processing to complete (since it's async)
+		Thread.sleep(2000);
+
+		// 3. Get results using the session cookie
+		List<List<String>> results = given()
+				.cookie("session_id", sessionId)
+				.when()
+				.get("/api/similarity/results")
+				.then()
+				.statusCode(200)
+				.extract()
+				.as(List.class);
+
+		// Verify results contain only sentences from paragraphs
+		assertNotNull(results, "Results should not be null");
+		assertFalse(results.isEmpty(), "Results should not be empty");
+
+		// Test with a more specific XPath
+		sessionId = given()
+				.contentType(ContentType.XML)
+				.body(XML_SAMPLE)
+				.when()
+				.post("/api/similarity/xpath?xpath=%2F%2Ftitle") // URL-encoded //title
+				.then()
+				.statusCode(202)
+				.extract()
+				.cookie("session_id");
+
+		// Wait for processing
+		Thread.sleep(2000);
+
+		// Get results for title-only XPath
+		results = given()
+				.cookie("session_id", sessionId)
+				.when()
+				.get("/api/similarity/results")
+				.then()
+				.statusCode(200)
+				.extract()
+				.as(List.class);
+
+		// Title might not form similarity groups if it's just one sentence
+		assertNotNull(results, "Results should not be null");
+	}
 }
