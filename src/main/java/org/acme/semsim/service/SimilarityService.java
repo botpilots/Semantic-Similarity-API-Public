@@ -66,8 +66,10 @@ public class SimilarityService {
 				}
 			}
 
-			// Add all groups, even those with only one sentence
-			groups.add(similarSentences);
+			// Only add groups with more than one sentence
+			if (similarSentences.size() > 1) {
+				groups.add(similarSentences);
+			}
 		}
 
 		LOG.info("Created " + groups.size() + " similarity groups");
