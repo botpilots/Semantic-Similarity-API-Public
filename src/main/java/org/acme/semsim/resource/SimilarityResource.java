@@ -50,7 +50,20 @@ public class SimilarityResource {
 	@Consumes(MediaType.APPLICATION_XML)
 	@Produces(MediaType.APPLICATION_JSON)
 	public Response processXmlWithXPath(String xmlContent, @QueryParam("xpath") String xpath) {
-		return processXml(xmlContent, xpath);
+		try {
+			// URL decode the XPath expression if it's URL-encoded
+			if (xpath != null && xpath.contains("%")) {
+				xpath = java.net.URLDecoder.decode(xpath, "UTF-8");
+				LOG.debug("Decoded XPath expression: " + xpath);
+			}
+			return processXml(xmlContent, xpath);
+		} catch (Exception e) {
+			LOG.error("Error processing XPath expression: " + xpath, e);
+			return Response.status(Response.Status.INTERNAL_SERVER_ERROR)
+					.entity(new ApiResponse("Error processing request.", "Invalid XPath expression: " + e.getMessage(),
+							null))
+					.build();
+		}
 	}
 
 	/**
