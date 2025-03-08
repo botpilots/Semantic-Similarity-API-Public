@@ -19,9 +19,9 @@ public class SimilarityResourceTest {
 			"\t<title>Sample Document for Similarity Testing</title>\n" +
 			"\t<content>\n" +
 			"\t\t<paragraph>\n" +
-			"            This is a test paragraph. It contains several sentences.\n" +
-			"            Similar sentences should be grouped together.\n" +
-			"            This paragraph demonstrates how the similarity service works.\n" +
+			"            This is a test paragraph with very similar content. \n" +
+			"            This is a test paragraph with very similar content. \n" +
+			"            This paragraph demonstrates similarity testing.\n" +
 			"\t\t</paragraph>\n" +
 			"\t</content>\n" +
 			"</document>";
