@@ -12,6 +12,22 @@ The Similarity API provides endpoints for processing XML documents and retrievin
 - A running instance of the Similarity API (default: http://localhost:8080)
 - Sample XML files for testing
 
+## Basic Usage
+
+The simplest workflow for using the API involves two steps:
+
+1. Submit an XML document for processing:
+
+```bash
+curl -X POST -H "Content-Type: application/xml" --data-binary @sample.xml http://localhost:8080/api/similarity -c cookie.txt
+```
+
+2. Retrieve similarity results:
+
+```bash
+curl -X GET -b cookie.txt http://localhost:8080/api/similarity/results
+```
+
 ## Testing Workflow
 
 ### 1. Process an XML Document
