@@ -42,12 +42,27 @@ public class SimilarityProcessingService {
 	 * @return Session ID to retrieve results later
 	 */
 	public String startProcessing(String xmlContent) {
+		return startProcessing(xmlContent, null);
+	}
+
+	/**
+	 * Process an XML document and find similarity groups using a specific XPath
+	 * expression.
+	 * This method starts asynchronous processing and returns a session ID.
+	 * 
+	 * @param xmlContent      XML document content to process
+	 * @param xpathExpression XPath expression to select elements for text
+	 *                        extraction (null for default)
+	 * @return Session ID to retrieve results later
+	 */
+	public String startProcessing(String xmlContent, String xpathExpression) {
 		// Create a new session
 		String sessionId = sessionService.createSession();
-		LOG.info("Starting XML processing for session: " + sessionId);
+		LOG.info("Starting XML processing for session: " + sessionId +
+				(xpathExpression != null ? " with XPath: " + xpathExpression : ""));
 
 		// Start async processing
-		CompletableFuture.runAsync(() -> processXmlContent(sessionId, xmlContent), processingExecutor)
+		CompletableFuture.runAsync(() -> processXmlContent(sessionId, xmlContent, xpathExpression), processingExecutor)
 				.exceptionally(ex -> {
 					LOG.error("Error processing XML for session " + sessionId, ex);
 					return null;
@@ -60,8 +75,17 @@ public class SimilarityProcessingService {
 	 * Process XML content and store results in the session.
 	 */
 	private void processXmlContent(String sessionId, String xmlContent) {
+		processXmlContent(sessionId, xmlContent, null);
+	}
+
+	/**
+	 * Process XML content with a specific XPath expression and store results in the
+	 * session.
+	 */
+	private void processXmlContent(String sessionId, String xmlContent, String xpathExpression) {
 		try {
-			LOG.debug("Processing XML for session: " + sessionId);
+			LOG.debug("Processing XML for session: " + sessionId +
+					(xpathExpression != null ? " with XPath: " + xpathExpression : ""));
 
 			// Get session data
 			SessionData sessionData = sessionService.getSession(sessionId);
@@ -71,7 +95,12 @@ public class SimilarityProcessingService {
 			}
 
 			// 1. Extract sentences from XML
-			List<String> sentenceTexts = xmlProcessorService.extractSentencesFromXml(xmlContent);
+			List<String> sentenceTexts;
+			if (xpathExpression != null) {
+				sentenceTexts = xmlProcessorService.extractSentencesFromXml(xmlContent, xpathExpression);
+			} else {
+				sentenceTexts = xmlProcessorService.extractSentencesFromXml(xmlContent);
+			}
 			LOG.info("Extracted " + sentenceTexts.size() + " sentences from XML for session " + sessionId);
 
 			// 2. Generate embeddings for sentences

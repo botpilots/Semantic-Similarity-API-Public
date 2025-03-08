@@ -1,116 +1,89 @@
-# SemSim - Self-Contained Sentence Similarity API
+# Semantic Similarity API
 
-This Quarkus application provides a self-contained Sentence Similarity API that processes XML documents, extracts sentences, generates vector embeddings, and groups similar sentences based on cosine similarity.
+A Quarkus-based REST API for processing XML documents and identifying groups of similar sentences using vector embeddings and cosine similarity.
 
 ## Features
 
-- **XML Document Processing**: Parse XML documents to extract text content.
-- **Sentence Vectorization**: Convert sentences into vector embeddings using a DL4J-based model.
-- **In-Memory Vector Storage**: Store vectors and text in-memory for fast processing.
-- **Similarity Grouping**: Group sentences that exceed a defined similarity threshold.
-- **Session Management**: Manage user sessions for asynchronous processing and result retrieval.
-- **Health Checks**: Includes readiness probes for container orchestration.
+- **XML Processing**: Extract sentences from XML documents
+- **XPath Support**: Target specific elements in XML documents using XPath expressions
+- **Sentence Vectorization**: Convert sentences to vector embeddings
+- **Similarity Analysis**: Group similar sentences based on cosine similarity
+- **Asynchronous Processing**: Process documents asynchronously with session-based result retrieval
 
-## Running the application
+## Getting Started
 
-### Development Mode
+### Prerequisites
 
-```shell
+- Java 11 or higher
+- Maven 3.8.1 or higher
+
+### Running the Application
+
+1. Clone the repository
+2. Navigate to the project directory
+3. Run the application in development mode:
+
+```bash
 ./mvnw compile quarkus:dev
 ```
 
-This enables hot reload and live coding. The application will be accessible at http://localhost:8080.
+The application will be available at http://localhost:8080
 
-### Packaging and Running in JVM Mode
+### Building the Application
 
-```shell
+To build the application:
+
+```bash
 ./mvnw package
-java -jar target/quarkus-app/quarkus-run.jar
 ```
 
-### Creating a Docker Container
+This will produce a `semsim-1.0.0-SNAPSHOT-runner.jar` file in the `/target` directory.
 
-```shell
-./mvnw package
-docker build -f src/main/docker/Dockerfile.jvm -t quarkus/semsim-jvm .
-docker run -i --rm -p 8080:8080 quarkus/semsim-jvm
+### Running Tests
+
+To run the tests:
+
+```bash
+./mvnw test
 ```
 
-## Configuration
+## API Usage
 
-Key configuration parameters in `application.properties`:
+The API provides endpoints for processing XML documents and retrieving similarity results. For detailed information, see:
 
-- `semsim.similarity.threshold`: The cosine similarity threshold for grouping (default: 0.75)
-- `semsim.session.timeout.minutes`: Session timeout in minutes (default: 60)
+- [API Specification](docs/api-specification.md): Comprehensive documentation of all API endpoints
+- [Curl Testing Guide](docs/curl-testing.md): Examples of how to test the API using curl
 
-## API Endpoints
+### Basic Usage
 
-### Submit XML for Processing
+1. Submit an XML document for processing:
 
-```
-POST /api/similarity
-Content-Type: application/xml
-
-<xml>Your XML content here</xml>
+```bash
+curl -X POST -H "Content-Type: application/xml" --data-binary @sample.xml http://localhost:8080/api/similarity -c cookie.txt
 ```
 
-**Response**: 
-- Status: 202 Accepted
-- Sets a session cookie: `session_id`
-- JSON body with a message and session ID.
+2. Retrieve similarity results:
 
-### Retrieve Results
-
-```
-GET /api/similarity/results
-Cookie: session_id=your-session-id
+```bash
+curl -X GET -b cookie.txt http://localhost:8080/api/similarity/results
 ```
 
-**Response**:
-- Status: 200 OK
-- JSON array of sentence groups: `[["sentence 1", "sentence 2"], ["sentence 3", "sentence 4"]]`
+### XPath Support
 
-## Health Checks
+The API supports XPath expressions to target specific elements in XML documents:
 
-The application provides a health check endpoint at `/q/health/ready`.
-
-## Testing
-
-### Sample XML
-
-Here's a simple XML document you can use for testing:
-
-```xml
-<document>
-    <title>Sample Document</title>
-    <content>
-        <paragraph>
-            This is a test paragraph. It contains several sentences.
-            Some sentences are similar to each other. Similar sentences should be grouped together.
-        </paragraph>
-        <paragraph>
-            This test paragraph has sentences. Sentences that are similar should be placed in groups.
-            Completely different sentences like this one should be separate.
-        </paragraph>
-    </content>
-</document>
+```bash
+curl -X POST -H "Content-Type: application/xml" --data-binary @sample.xml 'http://localhost:8080/api/similarity/xpath?xpath=//paragraph' -c cookie.txt
 ```
 
-### Using cURL
+## Architecture
 
-```shell
-# Submit XML for processing
-curl -X POST -H "Content-Type: application/xml" \
-  -d @sample.xml \
-  -c cookies.txt \
-  http://localhost:8080/api/similarity
+The application is built using the Quarkus framework and follows a layered architecture:
 
-# Retrieve results
-curl -X GET -b cookies.txt http://localhost:8080/api/similarity/results
-```
+- **Resource Layer**: REST API endpoints
+- **Service Layer**: Business logic for XML processing, sentence vectorization, and similarity analysis
+- **Model Layer**: Data models for sentences, embeddings, and session data
 
-## Implementation Notes
+## License
 
-- This is a simplified implementation that uses a mock embedding model for demonstration purposes.
-- In a production environment, you would integrate a pre-trained sentence transformer model.
-- For large XML documents, consider implementing pagination or limiting the number of sentences processed.
+This project is licensed under the Apache License 2.0 - see the LICENSE file for details.

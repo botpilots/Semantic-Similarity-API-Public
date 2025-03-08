@@ -116,4 +116,58 @@ public class XmlProcessorServiceTest {
 		assertTrue(sentences.stream().anyMatch(s -> s.contains("numbers")),
 				"Should contain text with 'numbers'");
 	}
+
+	@Test
+	public void testExtractSentencesWithXPath() throws Exception {
+		// Test XML with multiple paragraphs
+		String xml = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n" +
+				"<document>\n" +
+				"\t<title>Test Document</title>\n" +
+				"\t<content>\n" +
+				"\t\t<paragraph>This is paragraph one. It has two sentences.</paragraph>\n" +
+				"\t\t<paragraph>This is paragraph two. It also has two sentences.</paragraph>\n" +
+				"\t\t<section>\n" +
+				"\t\t\t<paragraph>This is paragraph three. It's in a section.</paragraph>\n" +
+				"\t\t</section>\n" +
+				"\t</content>\n" +
+				"</document>";
+
+		// Test with different XPath expressions
+
+		// 1. Extract from all paragraphs
+		List<String> allParagraphSentences = xmlProcessorService.extractSentencesFromXml(xml, "//paragraph");
+		assertEquals(6, allParagraphSentences.size(), "Should extract 6 sentences from all paragraphs");
+
+		// 2. Extract from first paragraph only
+		List<String> firstParagraphSentences = xmlProcessorService.extractSentencesFromXml(xml, "//paragraph[1]");
+		// The XPath expression matches both the first paragraph in content and the
+		// first paragraph in section
+		assertEquals(4, firstParagraphSentences.size(), "Should extract 4 sentences from matching paragraphs");
+		assertTrue(firstParagraphSentences.stream().anyMatch(s -> s.contains("paragraph one")),
+				"Should contain text from first paragraph");
+
+		// 3. Extract from paragraphs in content (not in section)
+		List<String> contentParagraphSentences = xmlProcessorService.extractSentencesFromXml(xml,
+				"/document/content/paragraph");
+		assertEquals(4, contentParagraphSentences.size(), "Should extract 4 sentences from content paragraphs");
+
+		// 4. Extract from title element
+		List<String> titleSentences = xmlProcessorService.extractSentencesFromXml(xml, "//title");
+		assertEquals(1, titleSentences.size(), "Should extract 1 sentence from title");
+		assertEquals("Test Document", titleSentences.get(0), "Should extract the title text");
+
+		// 5. Extract with complex XPath (paragraphs with position < 3)
+		List<String> firstTwoParagraphsSentences = xmlProcessorService.extractSentencesFromXml(xml,
+				"//paragraph[position()<3]");
+		// This matches all paragraphs that are the first or second child of their
+		// parent
+		assertEquals(6, firstTwoParagraphsSentences.size(),
+				"Should extract 6 sentences from paragraphs with position < 3");
+
+		// 6. Test with default XPath (should extract all text)
+		List<String> allSentences = xmlProcessorService.extractSentencesFromXml(xml);
+		// The default XPath is self::* which only selects the document element itself
+		// In this test case, it extracts the same sentences as //paragraph
+		assertEquals(6, allSentences.size(), "Should extract 6 sentences from the document element");
+	}
 }
