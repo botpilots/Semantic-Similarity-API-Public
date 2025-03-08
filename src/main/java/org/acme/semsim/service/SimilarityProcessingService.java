@@ -6,6 +6,7 @@ import org.acme.semsim.model.Sentence;
 import org.acme.semsim.model.SessionData;
 import org.jboss.logging.Logger;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Executor;
@@ -94,14 +95,29 @@ public class SimilarityProcessingService {
 				return;
 			}
 
+			// Check for empty XML content
+			if (xmlContent == null || xmlContent.trim().isEmpty()) {
+				LOG.warn("Empty XML content for session: " + sessionId);
+				// Still create an empty result to avoid null pointer exceptions
+				sessionData.addSimilarityGroup(new ArrayList<>());
+				return;
+			}
+
 			// 1. Extract sentences from XML
 			List<String> sentenceTexts;
-			if (xpathExpression != null) {
-				sentenceTexts = xmlProcessorService.extractSentencesFromXml(xmlContent, xpathExpression);
-			} else {
-				sentenceTexts = xmlProcessorService.extractSentencesFromXml(xmlContent);
+			try {
+				if (xpathExpression != null) {
+					sentenceTexts = xmlProcessorService.extractSentencesFromXml(xmlContent, xpathExpression);
+				} else {
+					sentenceTexts = xmlProcessorService.extractSentencesFromXml(xmlContent);
+				}
+				LOG.info("Extracted " + sentenceTexts.size() + " sentences from XML for session " + sessionId);
+			} catch (Exception e) {
+				LOG.error("Error extracting sentences from XML for session: " + sessionId, e);
+				// Create an empty result to avoid null pointer exceptions
+				sessionData.addSimilarityGroup(new ArrayList<>());
+				return;
 			}
-			LOG.info("Extracted " + sentenceTexts.size() + " sentences from XML for session " + sessionId);
 
 			// 2. Generate embeddings for sentences
 			List<Sentence> sentencesWithEmbeddings = embeddingService.generateEmbeddings(sentenceTexts);
