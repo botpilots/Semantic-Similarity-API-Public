@@ -10,7 +10,7 @@ The Similarity API provides endpoints for processing XML documents and retrievin
 
 - curl installed on your system
 - A running instance of the Similarity API (default: http://localhost:8080)
-- Sample XML files for testing
+- Sample XML files for testing (available in the `samples` directory)
 
 ## Basic Usage
 
@@ -19,7 +19,7 @@ The simplest workflow for using the API involves two steps:
 1. Submit an XML document for processing:
 
 ```bash
-curl -X POST -H "Content-Type: application/xml" --data-binary @sample.xml http://localhost:8080/api/similarity -c cookie.txt
+curl -X POST -H "Content-Type: application/xml" --data-binary @samples/sample_xs.xml http://localhost:8080/api/similarity -c cookie.txt
 ```
 
 2. Retrieve similarity results:
@@ -35,7 +35,7 @@ curl -X GET -b cookie.txt http://localhost:8080/api/similarity/results
 To process an XML document, send a POST request to the `/api/similarity` endpoint:
 
 ```bash
-curl -X POST -H "Content-Type: application/xml" --data-binary @sample.xml http://localhost:8080/api/similarity -c cookie.txt -v
+curl -X POST -H "Content-Type: application/xml" --data-binary @samples/sample_xs.xml http://localhost:8080/api/similarity -c cookie.txt -v
 ```
 
 This command:
@@ -61,6 +61,42 @@ This command:
 
 The response will contain groups of similar sentences from the processed XML.
 
+## Sample Files Examples
+
+The project includes several sample files of different sizes and structures that you can use for testing:
+
+### Extra Small Sample (XML)
+
+Process the extra small XML sample without XPath:
+
+```bash
+curl -X POST -H "Content-Type: application/xml" --data-binary @samples/sample_xs.xml http://localhost:8080/api/similarity -c cookie.txt -v
+```
+
+### Small Sample (DITA)
+
+Process the small DITA sample with the `self::*` XPath expression (selects all nodes):
+
+```bash
+curl -X POST -H "Content-Type: application/xml" --data-binary @samples/sample_s.dita http://localhost:8080/api/similarity/ -c cookie.txt -v
+```
+
+### Medium Sample (DITA)
+
+Process the medium DITA sample without XPath:
+
+```bash
+curl -X POST -H "Content-Type: application/xml" --data-binary @samples/sample_m.dita http://localhost:8080/api/similarity -c cookie.txt -v
+```
+
+### Large Sample (DITA)
+
+Process the large DITA sample without XPath (note: this may take longer to process due to file size):
+
+```bash
+curl -X POST -H "Content-Type: application/xml" --data-binary @samples/sample_l.dita http://localhost:8080/api/similarity -c cookie.txt -v
+```
+
 ## Advanced Testing: Using XPath
 
 The API supports an optional XPath parameter to extract sentences from specific XML elements.
@@ -83,6 +119,40 @@ curl -X POST -H "Content-Type: application/xml" --data-binary @sample.xml 'http:
 
 This example uses the URL-encoded form of `//paragraph[1]` to select only the first paragraph.
 
+### XPath Examples with Different Sample Files
+
+#### Extra Small Sample (XML)
+
+Extract all paragraphs from the extra small sample:
+
+```bash
+curl -X POST -H "Content-Type: application/xml" --data-binary @samples/sample_xs.xml 'http://localhost:8080/api/similarity/xpath?xpath=//paragraph' -c cookie.txt -v
+```
+
+#### Small Sample (DITA)
+
+Extract all paragraphs from the small DITA sample:
+
+```bash
+curl -X POST -H "Content-Type: application/xml" --data-binary @samples/sample_s.dita 'http://localhost:8080/api/similarity/xpath?xpath=//p' -c cookie.txt -v
+```
+
+#### Medium Sample (DITA)
+
+Extract all titles from the medium DITA sample:
+
+```bash
+curl -X POST -H "Content-Type: application/xml" --data-binary @samples/sample_m.dita 'http://localhost:8080/api/similarity/xpath?xpath=//title' -c cookie.txt -v
+```
+
+#### Large Sample (DITA)
+
+Extract all list items from the large DITA sample:
+
+```bash
+curl -X POST -H "Content-Type: application/xml" --data-binary @samples/sample_l.dita 'http://localhost:8080/api/similarity/xpath?xpath=//li/p' -c cookie.txt -v
+```
+
 ### Common XPath Examples
 
 Here are some useful XPath expressions for testing:
@@ -92,6 +162,9 @@ Here are some useful XPath expressions for testing:
 - `//title` - Select all title elements
 - `//paragraph[position()<3]` - Select the first two paragraph elements
 - `/document/content/paragraph` - Select paragraph elements that are direct children of the content element
+- `//p` - Select all p elements (common in DITA files)
+- `//li/p` - Select all p elements that are direct children of li elements
+- `//body/p` - Select all p elements that are direct children of body elements
 
 ## Troubleshooting
 
