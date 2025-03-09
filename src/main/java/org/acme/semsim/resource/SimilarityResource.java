@@ -26,45 +26,48 @@ public class SimilarityResource {
 	SimilarityProcessingService similarityProcessingService;
 
 	/**
-	 * Submit an XML document for processing with a specific XPath expression.
+	 * Submit an XML document for processing with specific element names.
 	 * 
 	 * @param xmlContent The XML content to process
-	 * @param xpath      The XPath expression to select elements for text extraction
-	 *                   (optional)
+	 * @param xpath      A space-separated string of element names to extract text
+	 *                   from
+	 *                   (default: "p")
 	 * @return Response with a session cookie
 	 */
 	@POST
 	@Consumes(MediaType.APPLICATION_XML)
 	@Produces(MediaType.APPLICATION_JSON)
-	public Response processXmlWithXPath(String xmlContent, @QueryParam("xpath") String xpath) {
+	public Response processXmlWithXPath(String xmlContent, @QueryParam("xpath") @DefaultValue("p") String xpath) {
 		try {
-			// Always URL decode the XPath expression as we assume it's encoded
+			// Always URL decode the element names as we assume it's encoded
 			if (xpath != null) {
 				xpath = java.net.URLDecoder.decode(xpath, "UTF-8");
-				LOG.debug("Decoded XPath expression: " + xpath);
+				LOG.debug("Decoded element names: " + xpath);
 			}
 			return processXml(xmlContent, xpath);
 		} catch (UnsupportedEncodingException e) {
-			LOG.error("Error decoding XPath expression: " + xpath, e);
+			LOG.error("Error decoding element names: " + xpath, e);
 			return Response.status(Response.Status.BAD_REQUEST)
-					.entity(new ApiResponse("Error processing request.", "Error decoding XPath: " + e.getMessage(),
+					.entity(new ApiResponse("Error processing request.",
+							"Error decoding element names: " + e.getMessage(),
 							null))
 					.build();
 		} catch (Exception e) {
-			LOG.error("Error processing XPath expression: " + xpath, e);
+			LOG.error("Error processing element names: " + xpath, e);
 			return Response.status(Response.Status.INTERNAL_SERVER_ERROR)
-					.entity(new ApiResponse("Error processing request.", "Invalid XPath expression: " + e.getMessage(),
+					.entity(new ApiResponse("Error processing request.", "Invalid element names: " + e.getMessage(),
 							null))
 					.build();
 		}
 	}
 
 	/**
-	 * Internal method to process XML with optional XPath.
+	 * Internal method to process XML with optional element names.
 	 */
-	private Response processXml(String xmlContent, String xpath) {
+	private Response processXml(String xmlContent, String elementNames) {
 		try {
-			LOG.info("Received XML document for processing" + (xpath != null ? " with XPath: " + xpath : ""));
+			LOG.info("Received XML document for processing"
+					+ (elementNames != null ? " with element names: " + elementNames : ""));
 
 			if (xmlContent == null || xmlContent.trim().isEmpty()) {
 				LOG.warn("Received empty XML content");
@@ -90,7 +93,7 @@ public class SimilarityResource {
 			}
 
 			// Start processing and get a session ID
-			String sessionId = similarityProcessingService.startProcessing(xmlContent, xpath);
+			String sessionId = similarityProcessingService.startProcessing(xmlContent, elementNames);
 
 			// Create session cookie
 			NewCookie sessionCookie = new NewCookie.Builder(SESSION_COOKIE_NAME)

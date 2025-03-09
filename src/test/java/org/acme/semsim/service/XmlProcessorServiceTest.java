@@ -28,7 +28,7 @@ public class XmlProcessorServiceTest {
 				"</document>";
 
 		// Default element is "p"
-		List<String> paragraphs = xmlProcessorService.extractSentencesFromXml(xml);
+		List<String> paragraphs = xmlProcessorService.extractElementTextFromXml(xml);
 
 		assertNotNull(paragraphs, "Extracted text should not be null");
 		assertEquals(3, paragraphs.size(), "Should extract 3 paragraphs");
@@ -50,7 +50,7 @@ public class XmlProcessorServiceTest {
 				"\t</section>\n" +
 				"</document>";
 
-		List<String> paragraphs = xmlProcessorService.extractSentencesFromXml(xml);
+		List<String> paragraphs = xmlProcessorService.extractElementTextFromXml(xml);
 
 		assertNotNull(paragraphs, "Extracted text should not be null");
 		assertEquals(2, paragraphs.size(), "Should extract 2 paragraphs");
@@ -67,7 +67,7 @@ public class XmlProcessorServiceTest {
 
 		// The service should handle invalid XML gracefully
 		assertThrows(Exception.class, () -> {
-			xmlProcessorService.extractSentencesFromXml(invalidXml);
+			xmlProcessorService.extractElementTextFromXml(invalidXml);
 		}, "Should throw exception for invalid XML");
 	}
 
@@ -78,7 +78,7 @@ public class XmlProcessorServiceTest {
 
 		// The service should handle empty XML gracefully
 		assertThrows(Exception.class, () -> {
-			xmlProcessorService.extractSentencesFromXml(emptyXml);
+			xmlProcessorService.extractElementTextFromXml(emptyXml);
 		}, "Should throw exception for empty XML");
 	}
 
@@ -91,7 +91,7 @@ public class XmlProcessorServiceTest {
 				"\t<p>This has numbers: 1, 2, 3</p>\n" +
 				"</document>";
 
-		List<String> paragraphs = xmlProcessorService.extractSentencesFromXml(xml);
+		List<String> paragraphs = xmlProcessorService.extractElementTextFromXml(xml);
 
 		assertNotNull(paragraphs, "Extracted text should not be null");
 		assertEquals(2, paragraphs.size(), "Should extract 2 paragraphs");
@@ -120,35 +120,35 @@ public class XmlProcessorServiceTest {
 		// Test with different element names
 
 		// 1. Extract from all paragraphs (default)
-		List<String> paragraphs = xmlProcessorService.extractSentencesFromXml(xml);
+		List<String> paragraphs = xmlProcessorService.extractElementTextFromXml(xml);
 		assertEquals(2, paragraphs.size(), "Should extract 2 paragraphs");
 		assertEquals("This is a paragraph.", paragraphs.get(0));
 		assertEquals("This is a nested paragraph.", paragraphs.get(1));
 
 		// 2. Extract from div elements
-		List<String> divs = xmlProcessorService.extractSentencesFromXml(xml, "div");
+		List<String> divs = xmlProcessorService.extractElementTextFromXml(xml, "div");
 		assertEquals(1, divs.size(), "Should extract 1 div");
 		assertEquals("This is a div.", divs.get(0));
 
 		// 3. Extract from title elements
-		List<String> titles = xmlProcessorService.extractSentencesFromXml(xml, "title");
+		List<String> titles = xmlProcessorService.extractElementTextFromXml(xml, "title");
 		assertEquals(1, titles.size(), "Should extract 1 title");
 		assertEquals("Test Document", titles.get(0));
 
 		// 4. Extract from heading elements
-		List<String> headings = xmlProcessorService.extractSentencesFromXml(xml, "h1");
+		List<String> headings = xmlProcessorService.extractElementTextFromXml(xml, "h1");
 		assertEquals(1, headings.size(), "Should extract 1 heading");
 		assertEquals("This is a heading.", headings.get(0));
 
 		// 5. Extract from multiple element types
-		List<String> mixedElements = xmlProcessorService.extractSentencesFromXml(xml, "p div");
+		List<String> mixedElements = xmlProcessorService.extractElementTextFromXml(xml, "p div");
 		assertEquals(3, mixedElements.size(), "Should extract 3 elements (2 paragraphs and 1 div)");
 		assertTrue(mixedElements.contains("This is a paragraph."));
 		assertTrue(mixedElements.contains("This is a div."));
 		assertTrue(mixedElements.contains("This is a nested paragraph."));
 
 		// 6. Extract from all specified elements
-		List<String> allElements = xmlProcessorService.extractSentencesFromXml(xml, "p div h1 title");
+		List<String> allElements = xmlProcessorService.extractElementTextFromXml(xml, "p div h1 title");
 		assertEquals(5, allElements.size(), "Should extract 5 elements");
 		assertTrue(allElements.contains("Test Document"));
 		assertTrue(allElements.contains("This is a paragraph."));
@@ -166,7 +166,7 @@ public class XmlProcessorServiceTest {
 				"\t<p>  This has   extra   spaces.  </p>\n" +
 				"</document>";
 
-		List<String> paragraphs = xmlProcessorService.extractSentencesFromXml(xml);
+		List<String> paragraphs = xmlProcessorService.extractElementTextFromXml(xml);
 
 		assertNotNull(paragraphs, "Extracted text should not be null");
 		assertEquals(2, paragraphs.size(), "Should extract 2 paragraphs");
