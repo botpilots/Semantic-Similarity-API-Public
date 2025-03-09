@@ -134,6 +134,8 @@ public class SimilarityProcessingService {
 			sentencesWithEmbeddings.forEach(sessionData::addSentence);
 
 			// 3. Group similar sentences
+			// TODO: Create a class for the similarity groups with metadata about the group
+			// such as its similarity score, etc.
 			List<List<String>> similarityGroups = similarityService.groupSimilarSentences(sentencesWithEmbeddings);
 			LOG.info("Found " + similarityGroups.size() + " similarity groups for session " + sessionId);
 
