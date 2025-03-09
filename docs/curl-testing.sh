@@ -55,7 +55,7 @@ echo "Running test suite: $TEST_SUITE"
 echo "Base URL: $BASE_URL"
 echo "Cookie file: $COOKIE_FILE"
 
-section "Basic Usage Examples"
+section "Trigger Accepted GET response Example"
 
 # 1. Submit an XML document for processing
 run_curl "curl -X POST -H \"Content-Type: application/xml\" --data-binary @samples/sample_xs.xml ${BASE_URL}/api/similarity -c ${COOKIE_FILE}"
@@ -163,6 +163,7 @@ fi
 section "URL-encoded XPath Examples"
 
 if should_run "small"; then
+	echo "NOTE: The URL-encoded XPath should not capture any elements and result in empty GET."
 	# URL-encoded example for //paragraph[contains(text(),'example')]
 	echo "Running: URL-encoded XPath - Text content search"
 	run_curl "curl -X POST -H \"Content-Type: application/xml\" --data-binary @samples/sample_xs.xml '${BASE_URL}/api/similarity?xpath=%2F%2Fparagraph%5Bcontains%28text%28%29%2C%27example%27%29%5D' -c ${COOKIE_FILE}"

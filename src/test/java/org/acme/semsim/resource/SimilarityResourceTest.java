@@ -1,7 +1,9 @@
 package org.acme.semsim.resource;
 
+import io.quarkus.logging.Log;
 import io.quarkus.test.junit.QuarkusTest;
 import io.restassured.http.ContentType;
+import io.restassured.response.Response;
 import org.junit.jupiter.api.Test;
 
 import java.util.List;
@@ -29,6 +31,46 @@ public class SimilarityResourceTest {
 			"\t\t</paragraph>\n" +
 			"\t</content>\n" +
 			"</document>";
+
+	/**
+	 * Polls the results endpoint until it returns a 200 status code or times out.
+	 * 
+	 * @param sessionId      The session ID to use for the request
+	 * @param maxAttempts    Maximum number of polling attempts
+	 * @param pollIntervalMs Time to wait between polling attempts in milliseconds
+	 * @return The response from the results endpoint
+	 * @throws InterruptedException If the thread is interrupted while sleeping
+	 */
+	private Response pollForResults(String sessionId)
+			throws InterruptedException {
+		Response response = null;
+		int attempts = 0;
+		Response previousResponse = null;
+		long pollIntervalMs = 50;
+
+		while (true) {
+			response = given()
+					.cookie("session_id", sessionId)
+					.when()
+					.get("/api/similarity/results");
+
+			if (response.getStatusCode() == 200 && !response.equals(previousResponse)) {
+				Log.info("New response received after " + attempts + " attempts, returning response");
+				// New response received, return the response
+				return response;
+			} else if (response.getStatusCode() == 202) {
+				// Still processing, wait and try again
+				attempts++;
+				Thread.sleep(pollIntervalMs);
+				pollIntervalMs += 50; // Increase pollIntervalMs by 50 ms
+				Log.info("Still processing, waiting for " + pollIntervalMs + " ms and trying again");
+			} else {
+				// Unexpected status code, return the response
+				return response;
+			}
+			previousResponse = response;
+		}
+	}
 
 	@Test
 	public void testProcessXml() {
@@ -72,16 +114,12 @@ public class SimilarityResourceTest {
 
 		assertNotNull(sessionId, "Session ID should not be null");
 
-		// 2. Wait for processing to complete (since it's async)
-		Thread.sleep(250);
+		// 2. Poll for results using the session cookie
+		Response response = pollForResults(sessionId);
 
-		// 3. Get results using the session cookie
-		given()
-				.cookie("session_id", sessionId)
-				.when()
-				.get("/api/similarity/results")
-				.then()
-				.statusCode(200);
+		// 3. Verify the response
+		assertEquals(200, response.getStatusCode(), "Expected status code 200 after polling");
+		assertNotNull(response.getBody(), "Response body should not be null");
 	}
 
 	@Test
@@ -124,21 +162,15 @@ public class SimilarityResourceTest {
 				.extract()
 				.cookie("session_id");
 
-		// Wait for processing
-		Thread.sleep(250);
+		// Poll for results
+		Response response = pollForResults(sessionId);
 
-		// Get results for title-only XPath
-		List<List<String>> results = given()
-				.cookie("session_id", sessionId)
-				.when()
-				.get("/api/similarity/results")
-				.then()
-				.statusCode(200)
-				.extract()
-				.as(new io.restassured.common.mapper.TypeRef<List<List<String>>>() {
-				});
+		// Verify the response status code
+		assertEquals(200, response.getStatusCode(), "Expected status code 200 after polling");
 
-		// Title might not form similarity groups if it's just one sentence
+		// Extract and verify the results
+		List<List<String>> results = response.as(new io.restassured.common.mapper.TypeRef<List<List<String>>>() {
+		});
 		assertNotNull(results, "Results should not be null");
 	}
 }
