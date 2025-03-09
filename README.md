@@ -1,17 +1,17 @@
 # Semantic Similarity API
 
-A Quarkus-based REST API for processing XML documents and identifying groups of similar sentences using vector embeddings and cosine similarity.
+A Quarkus-based REST API for processing XML documents and identifying groups of similar text elements using vector embeddings and cosine similarity.
 
 ## Introduction
 
-The Semantic Similarity API provides a powerful solution for analyzing text similarity within XML documents. It extracts sentences from XML content, converts them to vector embeddings, and groups similar sentences based on cosine similarity.
+The Semantic Similarity API provides a powerful solution for analyzing text similarity within XML documents. It extracts text content from specified XML elements, converts them to vector embeddings, and groups similar text based on cosine similarity.
 
 ### Features
 
-- **XML Processing**: Extract sentences from XML documents
-- **XPath Support**: Target specific elements in XML documents using XPath expressions
-- **Sentence Vectorization**: Convert sentences to vector embeddings
-- **Similarity Analysis**: Group similar sentences based on cosine similarity
+- **XML Processing**: Extract text content from XML documents
+- **Element Selection**: Target specific elements in XML documents using space-separated element names
+- **Text Vectorization**: Convert extracted text to vector embeddings
+- **Similarity Analysis**: Group similar text based on cosine similarity
 - **Asynchronous Processing**: Process documents asynchronously with session-based result retrieval
 
 ## Getting Started
