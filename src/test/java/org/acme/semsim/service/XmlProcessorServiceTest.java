@@ -15,159 +15,164 @@ public class XmlProcessorServiceTest {
 	XmlProcessorService xmlProcessorService;
 
 	@Test
-	public void testExtractSentencesFromXml() throws Exception {
-		// Test XML with multiple paragraphs and sentences
-		String xml = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n" +
-				"<document>\n" +
-				"\t<title>Test Document</title>\n" +
-				"\t<content>\n" +
-				"\t\t<paragraph>This is sentence one. This is sentence two.</paragraph>\n" +
-				"\t\t<paragraph>This is sentence three. This is sentence four.</paragraph>\n" +
-				"\t</content>\n" +
-				"</document>";
-
-		List<String> sentences = xmlProcessorService.extractSentencesFromXml(xml);
-
-		assertNotNull(sentences, "Sentences should not be null");
-		assertEquals(4, sentences.size(), "Should extract 4 sentences");
-
-		// Check that sentences contain the expected text
-		// The exact sentence text might vary based on the implementation
-		assertTrue(sentences.stream().anyMatch(s -> s.contains("sentence one")),
-				"Should contain text with 'sentence one'");
-		assertTrue(sentences.stream().anyMatch(s -> s.contains("sentence two")),
-				"Should contain text with 'sentence two'");
-		assertTrue(sentences.stream().anyMatch(s -> s.contains("sentence three")),
-				"Should contain text with 'sentence three'");
-		assertTrue(sentences.stream().anyMatch(s -> s.contains("sentence four")),
-				"Should contain text with 'sentence four'");
-	}
-
-	@Test
-	public void testExtractSentencesFromNestedXml() throws Exception {
-		// Test XML with nested elements
-		String xml = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n" +
-				"<document>\n" +
-				"\t<section>\n" +
-				"\t\t<subsection>\n" +
-				"\t\t\t<paragraph>Nested sentence one. Nested sentence two.</paragraph>\n" +
-				"\t\t</subsection>\n" +
-				"\t</section>\n" +
-				"</document>";
-
-		List<String> sentences = xmlProcessorService.extractSentencesFromXml(xml);
-
-		assertNotNull(sentences, "Sentences should not be null");
-		assertEquals(2, sentences.size(), "Should extract 2 sentences");
-
-		// Check that sentences contain the expected text
-		assertTrue(sentences.stream().anyMatch(s -> s.contains("Nested sentence one")),
-				"Should contain text with 'Nested sentence one'");
-		assertTrue(sentences.stream().anyMatch(s -> s.contains("Nested sentence two")),
-				"Should contain text with 'Nested sentence two'");
-	}
-
-	@Test
-	public void testExtractSentencesFromInvalidXml() {
-		// Test with invalid XML
-		String invalidXml = "<invalid>xml";
-
-		// The service should handle invalid XML gracefully
-		assertThrows(Exception.class, () -> {
-			try {
-				xmlProcessorService.extractSentencesFromXml(invalidXml);
-			} catch (Exception e) {
-				throw e;
-			}
-		}, "Should throw exception for invalid XML");
-	}
-
-	@Test
-	public void testExtractSentencesFromEmptyXml() {
-		// Test with empty XML
-		String emptyXml = "";
-
-		// The service should handle empty XML gracefully
-		assertThrows(Exception.class, () -> {
-			try {
-				xmlProcessorService.extractSentencesFromXml(emptyXml);
-			} catch (Exception e) {
-				throw e;
-			}
-		}, "Should throw exception for empty XML");
-	}
-
-	@Test
-	public void testExtractSentencesWithSpecialCharacters() throws Exception {
-		// Test XML with special characters
-		String xml = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n" +
-				"<document>\n" +
-				"\t<paragraph>This has special chars: &amp; &lt; &gt;. This has numbers: 1, 2, 3.</paragraph>\n" +
-				"</document>";
-
-		List<String> sentences = xmlProcessorService.extractSentencesFromXml(xml);
-
-		assertNotNull(sentences, "Sentences should not be null");
-		assertEquals(2, sentences.size(), "Should extract 2 sentences");
-
-		// Check that sentences contain the expected text with entities decoded
-		assertTrue(sentences.stream().anyMatch(s -> s.contains("special chars")),
-				"Should contain text with 'special chars'");
-		assertTrue(sentences.stream().anyMatch(s -> s.contains("numbers")),
-				"Should contain text with 'numbers'");
-	}
-
-	@Test
-	public void testExtractSentencesWithXPath() throws Exception {
+	public void testExtractTextFromParagraphs() throws Exception {
 		// Test XML with multiple paragraphs
 		String xml = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n" +
 				"<document>\n" +
 				"\t<title>Test Document</title>\n" +
 				"\t<content>\n" +
-				"\t\t<paragraph>This is paragraph one. It has two sentences.</paragraph>\n" +
-				"\t\t<paragraph>This is paragraph two. It also has two sentences.</paragraph>\n" +
+				"\t\t<p>This is the first paragraph.</p>\n" +
+				"\t\t<p>This is the second paragraph.</p>\n" +
+				"\t\t<p>This is the third paragraph.</p>\n" +
+				"\t</content>\n" +
+				"</document>";
+
+		// Default element is "p"
+		List<String> paragraphs = xmlProcessorService.extractSentencesFromXml(xml);
+
+		assertNotNull(paragraphs, "Extracted text should not be null");
+		assertEquals(3, paragraphs.size(), "Should extract 3 paragraphs");
+
+		// Check that paragraphs contain the expected text
+		assertEquals("This is the first paragraph.", paragraphs.get(0));
+		assertEquals("This is the second paragraph.", paragraphs.get(1));
+		assertEquals("This is the third paragraph.", paragraphs.get(2));
+	}
+
+	@Test
+	public void testExtractTextFromNestedElements() throws Exception {
+		// Test XML with nested elements
+		String xml = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n" +
+				"<document>\n" +
+				"\t<section>\n" +
+				"\t\t<p>This is a paragraph with <b>bold text</b> and <i>italic text</i>.</p>\n" +
+				"\t\t<p>This is another paragraph with <span>nested content</span>.</p>\n" +
+				"\t</section>\n" +
+				"</document>";
+
+		List<String> paragraphs = xmlProcessorService.extractSentencesFromXml(xml);
+
+		assertNotNull(paragraphs, "Extracted text should not be null");
+		assertEquals(2, paragraphs.size(), "Should extract 2 paragraphs");
+
+		// Check that paragraphs contain the expected text with nested content
+		assertEquals("This is a paragraph with bold text and italic text.", paragraphs.get(0));
+		assertEquals("This is another paragraph with nested content.", paragraphs.get(1));
+	}
+
+	@Test
+	public void testExtractTextFromInvalidXml() {
+		// Test with invalid XML
+		String invalidXml = "<invalid>xml";
+
+		// The service should handle invalid XML gracefully
+		assertThrows(Exception.class, () -> {
+			xmlProcessorService.extractSentencesFromXml(invalidXml);
+		}, "Should throw exception for invalid XML");
+	}
+
+	@Test
+	public void testExtractTextFromEmptyXml() {
+		// Test with empty XML
+		String emptyXml = "";
+
+		// The service should handle empty XML gracefully
+		assertThrows(Exception.class, () -> {
+			xmlProcessorService.extractSentencesFromXml(emptyXml);
+		}, "Should throw exception for empty XML");
+	}
+
+	@Test
+	public void testExtractTextWithSpecialCharacters() throws Exception {
+		// Test XML with special characters
+		String xml = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n" +
+				"<document>\n" +
+				"\t<p>This has special chars: &amp; &lt; &gt;</p>\n" +
+				"\t<p>This has numbers: 1, 2, 3</p>\n" +
+				"</document>";
+
+		List<String> paragraphs = xmlProcessorService.extractSentencesFromXml(xml);
+
+		assertNotNull(paragraphs, "Extracted text should not be null");
+		assertEquals(2, paragraphs.size(), "Should extract 2 paragraphs");
+
+		// Check that paragraphs contain the expected text with entities decoded
+		assertEquals("This has special chars: & < >", paragraphs.get(0));
+		assertEquals("This has numbers: 1, 2, 3", paragraphs.get(1));
+	}
+
+	@Test
+	public void testExtractTextWithMultipleElementTypes() throws Exception {
+		// Test XML with multiple element types
+		String xml = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n" +
+				"<document>\n" +
+				"\t<title>Test Document</title>\n" +
+				"\t<content>\n" +
+				"\t\t<p>This is a paragraph.</p>\n" +
+				"\t\t<div>This is a div.</div>\n" +
 				"\t\t<section>\n" +
-				"\t\t\t<paragraph>This is paragraph three. It's in a section.</paragraph>\n" +
+				"\t\t\t<p>This is a nested paragraph.</p>\n" +
+				"\t\t\t<h1>This is a heading.</h1>\n" +
 				"\t\t</section>\n" +
 				"\t</content>\n" +
 				"</document>";
 
-		// Test with different XPath expressions
+		// Test with different element names
 
-		// 1. Extract from all paragraphs
-		List<String> allParagraphSentences = xmlProcessorService.extractSentencesFromXml(xml, "//paragraph");
-		assertEquals(6, allParagraphSentences.size(), "Should extract 6 sentences from all paragraphs");
+		// 1. Extract from all paragraphs (default)
+		List<String> paragraphs = xmlProcessorService.extractSentencesFromXml(xml);
+		assertEquals(2, paragraphs.size(), "Should extract 2 paragraphs");
+		assertEquals("This is a paragraph.", paragraphs.get(0));
+		assertEquals("This is a nested paragraph.", paragraphs.get(1));
 
-		// 2. Extract from first paragraph only
-		List<String> firstParagraphSentences = xmlProcessorService.extractSentencesFromXml(xml, "//paragraph[1]");
-		// The XPath expression matches both the first paragraph in content and the
-		// first paragraph in section
-		assertEquals(4, firstParagraphSentences.size(), "Should extract 4 sentences from matching paragraphs");
-		assertTrue(firstParagraphSentences.stream().anyMatch(s -> s.contains("paragraph one")),
-				"Should contain text from first paragraph");
+		// 2. Extract from div elements
+		List<String> divs = xmlProcessorService.extractSentencesFromXml(xml, "div");
+		assertEquals(1, divs.size(), "Should extract 1 div");
+		assertEquals("This is a div.", divs.get(0));
 
-		// 3. Extract from paragraphs in content (not in section)
-		List<String> contentParagraphSentences = xmlProcessorService.extractSentencesFromXml(xml,
-				"/document/content/paragraph");
-		assertEquals(4, contentParagraphSentences.size(), "Should extract 4 sentences from content paragraphs");
+		// 3. Extract from title elements
+		List<String> titles = xmlProcessorService.extractSentencesFromXml(xml, "title");
+		assertEquals(1, titles.size(), "Should extract 1 title");
+		assertEquals("Test Document", titles.get(0));
 
-		// 4. Extract from title element
-		List<String> titleSentences = xmlProcessorService.extractSentencesFromXml(xml, "//title");
-		assertEquals(1, titleSentences.size(), "Should extract 1 sentence from title");
-		assertEquals("Test Document", titleSentences.get(0), "Should extract the title text");
+		// 4. Extract from heading elements
+		List<String> headings = xmlProcessorService.extractSentencesFromXml(xml, "h1");
+		assertEquals(1, headings.size(), "Should extract 1 heading");
+		assertEquals("This is a heading.", headings.get(0));
 
-		// 5. Extract with complex XPath (paragraphs with position < 3)
-		List<String> firstTwoParagraphsSentences = xmlProcessorService.extractSentencesFromXml(xml,
-				"//paragraph[position()<3]");
-		// This matches all paragraphs that are the first or second child of their
-		// parent
-		assertEquals(6, firstTwoParagraphsSentences.size(),
-				"Should extract 6 sentences from paragraphs with position < 3");
+		// 5. Extract from multiple element types
+		List<String> mixedElements = xmlProcessorService.extractSentencesFromXml(xml, "p div");
+		assertEquals(3, mixedElements.size(), "Should extract 3 elements (2 paragraphs and 1 div)");
+		assertTrue(mixedElements.contains("This is a paragraph."));
+		assertTrue(mixedElements.contains("This is a div."));
+		assertTrue(mixedElements.contains("This is a nested paragraph."));
 
-		// 6. Test with default XPath (should extract all text)
-		List<String> allSentences = xmlProcessorService.extractSentencesFromXml(xml);
-		// The default XPath is self::* which only selects the document element itself
-		// In this test case, it extracts the same sentences as //paragraph
-		assertEquals(6, allSentences.size(), "Should extract 6 sentences from the document element");
+		// 6. Extract from all specified elements
+		List<String> allElements = xmlProcessorService.extractSentencesFromXml(xml, "p div h1 title");
+		assertEquals(5, allElements.size(), "Should extract 5 elements");
+		assertTrue(allElements.contains("Test Document"));
+		assertTrue(allElements.contains("This is a paragraph."));
+		assertTrue(allElements.contains("This is a div."));
+		assertTrue(allElements.contains("This is a nested paragraph."));
+		assertTrue(allElements.contains("This is a heading."));
+	}
+
+	@Test
+	public void testWhitespaceNormalization() throws Exception {
+		// Test XML with whitespace issues
+		String xml = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n" +
+				"<document>\n" +
+				"\t<p>This has \n multiple \t lines \n and \t tabs.</p>\n" +
+				"\t<p>  This has   extra   spaces.  </p>\n" +
+				"</document>";
+
+		List<String> paragraphs = xmlProcessorService.extractSentencesFromXml(xml);
+
+		assertNotNull(paragraphs, "Extracted text should not be null");
+		assertEquals(2, paragraphs.size(), "Should extract 2 paragraphs");
+
+		// Check that whitespace is normalized
+		assertEquals("This has multiple lines and tabs.", paragraphs.get(0));
+		assertEquals("This has extra spaces.", paragraphs.get(1));
 	}
 }
