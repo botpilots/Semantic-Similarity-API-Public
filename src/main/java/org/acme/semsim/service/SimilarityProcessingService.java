@@ -109,11 +109,7 @@ public class SimilarityProcessingService {
 			// 1. Extract text elements from XML
 			List<String> textElements;
 			try {
-				if (elementNames != null) {
-					textElements = xmlProcessorService.extractElementTextFromXml(xmlContent, elementNames);
-				} else {
-					textElements = xmlProcessorService.extractElementTextFromXml(xmlContent);
-				}
+				textElements = xmlProcessorService.extractElementTextFromXml(xmlContent, elementNames);
 				LOG.info("Extracted " + textElements.size() + " text elements from XML for session " + sessionId);
 			} catch (Exception e) {
 				LOG.error("Error extracting text from XML for session: " + sessionId, e);

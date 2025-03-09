@@ -11,6 +11,8 @@ import static org.junit.jupiter.api.Assertions.*;
 @QuarkusTest
 public class XmlProcessorServiceTest {
 
+	String defaultElement = "p";
+
 	@Inject
 	XmlProcessorService xmlProcessorService;
 
@@ -28,7 +30,7 @@ public class XmlProcessorServiceTest {
 				"</document>";
 
 		// Default element is "p"
-		List<String> paragraphs = xmlProcessorService.extractElementTextFromXml(xml);
+		List<String> paragraphs = xmlProcessorService.extractElementTextFromXml(xml, defaultElement);
 
 		assertNotNull(paragraphs, "Extracted text should not be null");
 		assertEquals(3, paragraphs.size(), "Should extract 3 paragraphs");
@@ -50,7 +52,7 @@ public class XmlProcessorServiceTest {
 				"\t</section>\n" +
 				"</document>";
 
-		List<String> paragraphs = xmlProcessorService.extractElementTextFromXml(xml);
+		List<String> paragraphs = xmlProcessorService.extractElementTextFromXml(xml, defaultElement);
 
 		assertNotNull(paragraphs, "Extracted text should not be null");
 		assertEquals(2, paragraphs.size(), "Should extract 2 paragraphs");
@@ -67,7 +69,7 @@ public class XmlProcessorServiceTest {
 
 		// The service should handle invalid XML gracefully
 		assertThrows(Exception.class, () -> {
-			xmlProcessorService.extractElementTextFromXml(invalidXml);
+			xmlProcessorService.extractElementTextFromXml(invalidXml, defaultElement);
 		}, "Should throw exception for invalid XML");
 	}
 
@@ -78,7 +80,7 @@ public class XmlProcessorServiceTest {
 
 		// The service should handle empty XML gracefully
 		assertThrows(Exception.class, () -> {
-			xmlProcessorService.extractElementTextFromXml(emptyXml);
+			xmlProcessorService.extractElementTextFromXml(emptyXml, defaultElement);
 		}, "Should throw exception for empty XML");
 	}
 
@@ -91,7 +93,7 @@ public class XmlProcessorServiceTest {
 				"\t<p>This has numbers: 1, 2, 3</p>\n" +
 				"</document>";
 
-		List<String> paragraphs = xmlProcessorService.extractElementTextFromXml(xml);
+		List<String> paragraphs = xmlProcessorService.extractElementTextFromXml(xml, defaultElement);
 
 		assertNotNull(paragraphs, "Extracted text should not be null");
 		assertEquals(2, paragraphs.size(), "Should extract 2 paragraphs");
@@ -120,7 +122,7 @@ public class XmlProcessorServiceTest {
 		// Test with different element names
 
 		// 1. Extract from all paragraphs (default)
-		List<String> paragraphs = xmlProcessorService.extractElementTextFromXml(xml);
+		List<String> paragraphs = xmlProcessorService.extractElementTextFromXml(xml, defaultElement);
 		assertEquals(2, paragraphs.size(), "Should extract 2 paragraphs");
 		assertEquals("This is a paragraph.", paragraphs.get(0));
 		assertEquals("This is a nested paragraph.", paragraphs.get(1));
@@ -166,7 +168,7 @@ public class XmlProcessorServiceTest {
 				"\t<p>  This has   extra   spaces.  </p>\n" +
 				"</document>";
 
-		List<String> paragraphs = xmlProcessorService.extractElementTextFromXml(xml);
+		List<String> paragraphs = xmlProcessorService.extractElementTextFromXml(xml, defaultElement);
 
 		assertNotNull(paragraphs, "Extracted text should not be null");
 		assertEquals(2, paragraphs.size(), "Should extract 2 paragraphs");

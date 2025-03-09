@@ -24,20 +24,6 @@ public class XmlProcessorService {
 
 	private static final Logger LOG = Logger.getLogger(XmlProcessorService.class);
 
-	// Default element to extract text from if none specified
-	private static final String DEFAULT_ELEMENT = "p";
-
-	/**
-	 * Parses an XML document and extracts text content from all paragraph elements.
-	 * 
-	 * @param xmlContent The XML document as a string
-	 * @return List of extracted text content
-	 * @throws Exception if XML parsing fails
-	 */
-	public List<String> extractElementTextFromXml(String xmlContent) throws Exception {
-		return extractElementTextFromXml(xmlContent, DEFAULT_ELEMENT);
-	}
-
 	/**
 	 * Parses an XML document and extracts text content from specified elements.
 	 * 
