@@ -13,7 +13,7 @@ curl -X POST -H "Content-Type: application/xml" --data-binary @samples/sample_s.
 ### 2. Process a Medium XML Document (with encoded XPath)
 
 ```bash
-curl -X POST -H "Content-Type: application/xml" --data-binary @samples/sample_m.dita 'http://localhost:8080/api/similarity?xpath=%2F%2Ftitle' -c cookie.txt
+curl -X POST -H "Content-Type: application/xml" --data-binary @samples/sample_m.dita 'http://localhost:8080/api/similarity?elements=title' -c cookie.txt
 ```
 
 ### 3. Retrieve Similarity Results

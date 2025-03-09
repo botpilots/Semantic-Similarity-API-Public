@@ -7,8 +7,11 @@ import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.NewCookie;
 import jakarta.ws.rs.core.Response;
 import org.acme.semsim.dto.ApiResponse;
+import org.acme.semsim.model.SessionData;
 import org.acme.semsim.service.SimilarityProcessingService;
 import org.jboss.logging.Logger;
+
+import io.quarkus.logging.Log;
 
 import java.util.List;
 import java.io.UnsupportedEncodingException;
@@ -26,45 +29,54 @@ public class SimilarityResource {
 	SimilarityProcessingService similarityProcessingService;
 
 	/**
-	 * Submit an XML document for processing with a specific XPath expression.
+	 * Submit an XML document for processing with specific element names.
 	 * 
 	 * @param xmlContent The XML content to process
-	 * @param xpath      The XPath expression to select elements for text extraction
-	 *                   (optional)
+	 * @param xpath      A space-separated string of element names to extract text
+	 *                   from
+	 *                   (default: "p")
 	 * @return Response with a session cookie
 	 */
 	@POST
 	@Consumes(MediaType.APPLICATION_XML)
 	@Produces(MediaType.APPLICATION_JSON)
-	public Response processXmlWithXPath(String xmlContent, @QueryParam("xpath") String xpath) {
+	public Response processXmlWithXPath(String xmlContent, @QueryParam("elements") @DefaultValue("p") String elements) {
 		try {
-			// Always URL decode the XPath expression as we assume it's encoded
-			if (xpath != null) {
-				xpath = java.net.URLDecoder.decode(xpath, "UTF-8");
-				LOG.debug("Decoded XPath expression: " + xpath);
+			// Always URL decode the element names as we assume it's encoded
+			if (elements != null) {
+				elements = java.net.URLDecoder.decode(elements, "UTF-8");
+				LOG.debug("Decoded element names: " + elements);
+				// Validate that the element name starts with a letter or '_', and contains only
+				// letters, digits, '-', '_', or '.'.
+				if (!elements.matches("^[a-zA-Z_][a-zA-Z0-9_-]*$")) {
+					throw new IllegalArgumentException(elements);
+				}
 			}
-			return processXml(xmlContent, xpath);
+			return processXml(xmlContent, elements);
 		} catch (UnsupportedEncodingException e) {
-			LOG.error("Error decoding XPath expression: " + xpath, e);
+			LOG.error("Error decoding element names: " + elements, e);
 			return Response.status(Response.Status.BAD_REQUEST)
-					.entity(new ApiResponse("Error processing request.", "Error decoding XPath: " + e.getMessage(),
+					.entity(new ApiResponse("Error processing request.",
+							"Error decoding element names: " + e.getMessage(),
 							null))
 					.build();
-		} catch (Exception e) {
-			LOG.error("Error processing XPath expression: " + xpath, e);
-			return Response.status(Response.Status.INTERNAL_SERVER_ERROR)
-					.entity(new ApiResponse("Error processing request.", "Invalid XPath expression: " + e.getMessage(),
+		} catch (IllegalArgumentException e) {
+			LOG.error("Validation error for elements parameter: " + elements, e);
+			return Response.status(Response.Status.BAD_REQUEST)
+					.entity(new ApiResponse("Error processing request.",
+							"Invalid elements names: " + elements + " " + e.getMessage(),
 							null))
 					.build();
 		}
 	}
 
 	/**
-	 * Internal method to process XML with optional XPath.
+	 * Internal method to process XML with optional element names.
 	 */
-	private Response processXml(String xmlContent, String xpath) {
+	private Response processXml(String xmlContent, String elementNames) {
 		try {
-			LOG.info("Received XML document for processing" + (xpath != null ? " with XPath: " + xpath : ""));
+			LOG.info("Received XML document for processing"
+					+ (elementNames != null ? " with element names: " + elementNames : ""));
 
 			if (xmlContent == null || xmlContent.trim().isEmpty()) {
 				LOG.warn("Received empty XML content");
@@ -90,7 +102,9 @@ public class SimilarityResource {
 			}
 
 			// Start processing and get a session ID
-			String sessionId = similarityProcessingService.startProcessing(xmlContent, xpath);
+			// NOTE: This is async, refer to GET /api/similarity/results to get processing
+			// status etc.
+			String sessionId = similarityProcessingService.startProcessing(xmlContent, elementNames);
 
 			// Create session cookie
 			NewCookie sessionCookie = new NewCookie.Builder(SESSION_COOKIE_NAME)
@@ -165,13 +179,36 @@ public class SimilarityResource {
 						.build();
 			}
 
+			// If no embeddings were generated, return a bad request
+			if (status == org.acme.semsim.model.SessionData.ProcessingStatus.NO_EMBEDDINGS_GENERATED) {
+				return Response.status(Response.Status.BAD_REQUEST)
+						.entity(new ApiResponse(
+								"No embeddings were generated. This may be because no matching elements were found in your XML. "
+										+
+										"The default element is 'p'. If your XML uses different elements, please specify them using the 'elements' query parameter, "
+										+
+										"for example: /api/similarity?elements=paragraph",
+								"No sentences found in XML. Revise elements query parameter or check data.",
+								null))
+						.build();
+			}
+
 			// Processing is complete, get the results
 			List<List<String>> similarityGroups = similarityProcessingService.getSimilarityResults(sessionId);
 
-			if (similarityGroups == null || similarityGroups.isEmpty()) {
-				LOG.info("No results found for session: " + sessionId);
+			if (similarityGroups == null) {
+				LOG.info("Session was not found: " + sessionId);
 				return Response.status(Response.Status.NOT_FOUND)
-						.entity(new ApiResponse("No similarity groups found for this session.", null))
+						.entity(new ApiResponse("Session was not found.", null))
+						.build();
+			}
+
+			if (similarityGroups.isEmpty()) {
+				LOG.info("Processing completed but no similarity groups were created for this session: " + sessionId);
+				return Response.ok()
+						.entity(new ApiResponse(
+								"Processing completed but no similarity groups were created for this session.",
+								sessionId))
 						.build();
 			}
 

@@ -17,7 +17,8 @@ public class SessionData {
 	public enum ProcessingStatus {
 		PROCESSING,
 		COMPLETED,
-		ERROR
+		ERROR,
+		NO_EMBEDDINGS_GENERATED
 	}
 
 	public SessionData(String sessionId) {

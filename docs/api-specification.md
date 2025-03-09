@@ -71,7 +71,7 @@ Processes an XML document using a specific XPath expression to extract sentences
 curl -X POST \
   -H "Content-Type: application/xml" \
   --data-binary @sample.xml \
-  'http://localhost:8080/api/similarity/xpath?xpath=//paragraph'
+  'http://localhost:8080/api/similarity/xpath?elements=paragraph'
 ```
 
 **Response:**
@@ -194,7 +194,7 @@ The API supports various XPath expressions to target specific elements in the XM
 
 2. When using curl, enclose the URL in single quotes to prevent shell interpretation of special characters:
    ```bash
-   curl -X POST -H "Content-Type: application/xml" --data-binary @sample.xml 'http://localhost:8080/api/similarity/xpath?xpath=//paragraph'
+   curl -X POST -H "Content-Type: application/xml" --data-binary @sample.xml 'http://localhost:8080/api/similarity/xpath?elements=paragraph'
    ```
 
 ## Processing Flow
