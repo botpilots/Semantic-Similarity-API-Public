@@ -37,7 +37,7 @@ public class SimilarityResource {
 	@POST
 	@Consumes(MediaType.APPLICATION_XML)
 	@Produces(MediaType.APPLICATION_JSON)
-	public Response processXmlWithXPath(String xmlContent, @QueryParam("xpath") @DefaultValue("p") String elements) {
+	public Response processXmlWithXPath(String xmlContent, @QueryParam("elements") @DefaultValue("p") String elements) {
 		try {
 			// Always URL decode the element names as we assume it's encoded
 			if (elements != null) {
@@ -57,10 +57,11 @@ public class SimilarityResource {
 							"Error decoding element names: " + e.getMessage(),
 							null))
 					.build();
-		} catch (Exception e) {
-			LOG.error("Error processing element names: " + elements, e);
-			return Response.status(Response.Status.INTERNAL_SERVER_ERROR)
-					.entity(new ApiResponse("Error processing request.", "Invalid element names: " + e.getMessage(),
+		} catch (IllegalArgumentException e) {
+			LOG.error("Validation error for elements parameter: " + elements, e);
+			return Response.status(Response.Status.BAD_REQUEST)
+					.entity(new ApiResponse("Error processing request.",
+							"Invalid elements names: " + elements + " " + e.getMessage(),
 							null))
 					.build();
 		}

@@ -65,6 +65,7 @@ public class SimilarityResourceTest {
 				pollIntervalMs += 50; // Increase pollIntervalMs by 50 ms
 				Log.info("Still processing, waiting for " + pollIntervalMs + " ms and trying again");
 			} else {
+
 				// Unexpected status code, return the response
 				return response;
 			}
@@ -106,7 +107,7 @@ public class SimilarityResourceTest {
 				.contentType(ContentType.XML)
 				.body(XML_SAMPLE)
 				.when()
-				.post("/api/similarity")
+				.post("/api/similarity?elements=paragraph")
 				.then()
 				.statusCode(202)
 				.extract()
@@ -149,28 +150,18 @@ public class SimilarityResourceTest {
 	}
 
 	@Test
-	public void testProcessXmlWithXPath() throws Exception {
+	public void testProcessXmlWithXPath() {
 
 		// Test with a url encoded XPath
-		String sessionId = given()
+		given()
 				.contentType(ContentType.XML)
 				.body(XML_SAMPLE)
 				.when()
-				.post("/api/similarity?xpath=%2F%2Fparagraph") // URL-encoded //paragraph
+				.post("/api/similarity?elements=%2F%2Fparagraph") // URL-encoded //paragraph
 				.then()
-				.statusCode(202)
+				// Should produce Bad request status code 400.
+				.statusCode(400)
 				.extract()
 				.cookie("session_id");
-
-		// Poll for results
-		Response response = pollForResults(sessionId);
-
-		// Verify the response status code
-		assertEquals(200, response.getStatusCode(), "Expected status code 200 after polling");
-
-		// Extract and verify the results
-		List<List<String>> results = response.as(new io.restassured.common.mapper.TypeRef<List<List<String>>>() {
-		});
-		assertNotNull(results, "Results should not be null");
 	}
 }
