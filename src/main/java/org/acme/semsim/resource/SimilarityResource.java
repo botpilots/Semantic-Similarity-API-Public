@@ -33,7 +33,7 @@ public class SimilarityResource {
 	 * 
 	 * @param xmlContent The XML content to process
 	 * @param xpath      A space-separated string of element names to extract text
-	 *                   from
+	 *                   from (e.g., "p li div")
 	 *                   (default: "p")
 	 * @return Response with a session cookie
 	 */
@@ -46,9 +46,10 @@ public class SimilarityResource {
 			if (elements != null) {
 				elements = java.net.URLDecoder.decode(elements, "UTF-8");
 				LOG.debug("Decoded element names: " + elements);
-				// Validate that the element name starts with a letter or '_', and contains only
-				// letters, digits, '-', '_', or '.'.
-				if (!elements.matches("^[a-zA-Z_][a-zA-Z0-9_-]*$")) {
+				// Validate that each element name starts with a letter or '_', and contains
+				// only
+				// letters, digits, '-', or '_'. Multiple elements can be separated by spaces.
+				if (!elements.matches("^[a-zA-Z_][a-zA-Z0-9_-]*(\\s+[a-zA-Z_][a-zA-Z0-9_-]*)*$")) {
 					throw new IllegalArgumentException(elements);
 				}
 			}
