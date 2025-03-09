@@ -55,10 +55,18 @@ echo "Running test suite: $TEST_SUITE"
 echo "Base URL: $BASE_URL"
 echo "Cookie file: $COOKIE_FILE"
 
-section "Trigger Accepted GET response Example"
+section "Trigger No Embeddings Generated Test"
 
 # 1. Submit an XML document for processing
 run_curl "curl -X POST -H \"Content-Type: application/xml\" --data-binary @samples/sample_xs.xml ${BASE_URL}/api/similarity -c ${COOKIE_FILE}"
+
+# 2. Retrieve similarity results
+run_curl "curl -X GET -b ${COOKIE_FILE} ${BASE_URL}/api/similarity/results"
+
+section "Trigger Accepted GET Response Test"
+
+# 1. Submit an XML document for processing
+run_curl "curl -X POST -H \"Content-Type: application/xml\" --data-binary @samples/sample_xs.xml ${BASE_URL}/api/similarity?elements=paragraph -c ${COOKIE_FILE}"
 
 # 2. Retrieve similarity results
 run_curl "curl -X GET -b ${COOKIE_FILE} ${BASE_URL}/api/similarity/results"
