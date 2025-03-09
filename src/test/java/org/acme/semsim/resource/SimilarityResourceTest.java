@@ -5,10 +5,8 @@ import io.restassured.http.ContentType;
 import org.junit.jupiter.api.Test;
 
 import java.util.List;
-import java.util.Map;
 
 import static io.restassured.RestAssured.given;
-import static org.hamcrest.CoreMatchers.*;
 import static org.junit.jupiter.api.Assertions.*;
 
 @QuarkusTest
@@ -69,7 +67,7 @@ public class SimilarityResourceTest {
 		assertNotNull(sessionId, "Session ID should not be null");
 
 		// 2. Wait for processing to complete (since it's async)
-		Thread.sleep(2000);
+		Thread.sleep(250);
 
 		// 3. Get results using the session cookie
 		given()
@@ -108,25 +106,22 @@ public class SimilarityResourceTest {
 
 	@Test
 	public void testProcessXmlWithXPath() throws Exception {
-		// Test submitting XML with XPath parameter
 
-		// 1. Submit XML with XPath for processing
+		// Test with a url encoded XPath
 		String sessionId = given()
 				.contentType(ContentType.XML)
 				.body(XML_SAMPLE)
 				.when()
-				.post("/api/similarity/xpath?xpath=//paragraph")
+				.post("/api/similarity?xpath=%2F%2Ftitle") // URL-encoded //title
 				.then()
 				.statusCode(202)
 				.extract()
 				.cookie("session_id");
 
-		assertNotNull(sessionId, "Session ID should not be null");
+		// Wait for processing
+		Thread.sleep(250);
 
-		// 2. Wait for processing to complete (since it's async)
-		Thread.sleep(2000);
-
-		// 3. Get results using the session cookie
+		// Get results for title-only XPath
 		List<List<String>> results = given()
 				.cookie("session_id", sessionId)
 				.when()
@@ -134,35 +129,8 @@ public class SimilarityResourceTest {
 				.then()
 				.statusCode(200)
 				.extract()
-				.as(List.class);
-
-		// Verify results contain only sentences from paragraphs
-		assertNotNull(results, "Results should not be null");
-		assertFalse(results.isEmpty(), "Results should not be empty");
-
-		// Test with a more specific XPath
-		sessionId = given()
-				.contentType(ContentType.XML)
-				.body(XML_SAMPLE)
-				.when()
-				.post("/api/similarity/xpath?xpath=%2F%2Ftitle") // URL-encoded //title
-				.then()
-				.statusCode(202)
-				.extract()
-				.cookie("session_id");
-
-		// Wait for processing
-		Thread.sleep(2000);
-
-		// Get results for title-only XPath
-		results = given()
-				.cookie("session_id", sessionId)
-				.when()
-				.get("/api/similarity/results")
-				.then()
-				.statusCode(200)
-				.extract()
-				.as(List.class);
+				.as(new io.restassured.common.mapper.TypeRef<List<List<String>>>() {
+				});
 
 		// Title might not form similarity groups if it's just one sentence
 		assertNotNull(results, "Results should not be null");

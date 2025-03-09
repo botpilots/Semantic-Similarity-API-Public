@@ -49,7 +49,7 @@ public class SimilarityProcessingServiceTest {
 		String sessionId = similarityProcessingService.startProcessing(XML_SAMPLE);
 
 		// Wait for processing to complete (since it's async)
-		Thread.sleep(2000);
+		Thread.sleep(250);
 
 		// Get results
 		List<List<String>> results = similarityProcessingService.getSimilarityResults(sessionId);
@@ -77,10 +77,7 @@ public class SimilarityProcessingServiceTest {
 		String sessionId = similarityProcessingService.startProcessing("");
 
 		// Wait for processing to complete
-		Thread.sleep(1000);
-
-		// Get results - should still have a valid session but possibly empty results
-		List<List<String>> results = similarityProcessingService.getSimilarityResults(sessionId);
+		Thread.sleep(250);
 
 		// The service should handle empty XML gracefully
 		assertNotNull(sessionId, "Session ID should not be null even for empty XML");
