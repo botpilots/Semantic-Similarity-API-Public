@@ -20,6 +20,12 @@ public class SimilarityResourceTest {
 			"            This is a test paragraph with very similar content. \n" +
 			"            This is a test paragraph with very similar content. \n" +
 			"            This paragraph demonstrates similarity testing.\n" +
+			"            Another paragraph with similar content for testing.\n" +
+			"            Yet another paragraph with similar content for testing.\n" +
+			"            This paragraph also tests similarity with slight variations.\n" +
+			"            Similarity testing is demonstrated in this paragraph as well.\n" +
+			"            The content of this paragraph is similar to the others.\n" +
+			"            Testing similarity with multiple paragraphs is the goal here.\n" +
 			"\t\t</paragraph>\n" +
 			"\t</content>\n" +
 			"</document>";
@@ -112,7 +118,7 @@ public class SimilarityResourceTest {
 				.contentType(ContentType.XML)
 				.body(XML_SAMPLE)
 				.when()
-				.post("/api/similarity?xpath=%2F%2Ftitle") // URL-encoded //title
+				.post("/api/similarity?xpath=%2F%2Fparagraph") // URL-encoded //paragraph
 				.then()
 				.statusCode(202)
 				.extract()
