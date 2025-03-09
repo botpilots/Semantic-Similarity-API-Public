@@ -124,6 +124,12 @@ public class SimilarityProcessingService {
 			LOG.info("Generated embeddings for " + sentencesWithEmbeddings.size() +
 					" sentences for session " + sessionId);
 
+			if (sentencesWithEmbeddings.isEmpty()) {
+				LOG.warn("No embeddings generated for session: " + sessionId);
+				sessionData.setProcessingStatus(SessionData.ProcessingStatus.NO_EMBEDDINGS_GENERATED);
+				return;
+			}
+
 			// Store sentences with embeddings in session
 			sentencesWithEmbeddings.forEach(sessionData::addSentence);
 

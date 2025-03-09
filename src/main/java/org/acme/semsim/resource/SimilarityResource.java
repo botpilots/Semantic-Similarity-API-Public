@@ -7,8 +7,11 @@ import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.NewCookie;
 import jakarta.ws.rs.core.Response;
 import org.acme.semsim.dto.ApiResponse;
+import org.acme.semsim.model.SessionData;
 import org.acme.semsim.service.SimilarityProcessingService;
 import org.jboss.logging.Logger;
+
+import io.quarkus.logging.Log;
 
 import java.util.List;
 import java.io.UnsupportedEncodingException;
@@ -99,6 +102,8 @@ public class SimilarityResource {
 			}
 
 			// Start processing and get a session ID
+			// NOTE: This is async, refer to GET /api/similarity/results to get processing
+			// status etc.
 			String sessionId = similarityProcessingService.startProcessing(xmlContent, elementNames);
 
 			// Create session cookie
@@ -174,13 +179,36 @@ public class SimilarityResource {
 						.build();
 			}
 
+			// If no embeddings were generated, return a bad request
+			if (status == org.acme.semsim.model.SessionData.ProcessingStatus.NO_EMBEDDINGS_GENERATED) {
+				return Response.status(Response.Status.BAD_REQUEST)
+						.entity(new ApiResponse(
+								"No embeddings were generated. This may be because no matching elements were found in your XML. "
+										+
+										"The default element is 'p'. If your XML uses different elements, please specify them using the 'elements' query parameter, "
+										+
+										"for example: /api/similarity?elements=paragraph",
+								"No sentences found in XML. Revise elements query parameter or check data.",
+								null))
+						.build();
+			}
+
 			// Processing is complete, get the results
 			List<List<String>> similarityGroups = similarityProcessingService.getSimilarityResults(sessionId);
 
-			if (similarityGroups == null || similarityGroups.isEmpty()) {
-				LOG.info("No results found for session: " + sessionId);
+			if (similarityGroups == null) {
+				LOG.info("Session was not found: " + sessionId);
 				return Response.status(Response.Status.NOT_FOUND)
-						.entity(new ApiResponse("No similarity groups found for this session.", null))
+						.entity(new ApiResponse("Session was not found.", null))
+						.build();
+			}
+
+			if (similarityGroups.isEmpty()) {
+				LOG.info("Processing completed but no similarity groups were created for this session: " + sessionId);
+				return Response.ok()
+						.entity(new ApiResponse(
+								"Processing completed but no similarity groups were created for this session.",
+								sessionId))
 						.build();
 			}
 
