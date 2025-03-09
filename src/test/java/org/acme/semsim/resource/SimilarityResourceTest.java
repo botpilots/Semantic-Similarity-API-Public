@@ -7,7 +7,12 @@ import io.restassured.response.Response;
 import org.junit.jupiter.api.Test;
 
 import java.util.List;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+import java.util.regex.Pattern;
 
+import static org.acme.semsim.TestUtils.pollForResults;
+import static org.acme.semsim.TestUtils.getParagraphCount;
 import static io.restassured.RestAssured.given;
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -32,46 +37,16 @@ public class SimilarityResourceTest {
 			"\t</content>\n" +
 			"</document>";
 
-	/**
-	 * Polls the results endpoint until it returns a 200 status code or times out.
-	 * 
-	 * @param sessionId      The session ID to use for the request
-	 * @param maxAttempts    Maximum number of polling attempts
-	 * @param pollIntervalMs Time to wait between polling attempts in milliseconds
-	 * @return The response from the results endpoint
-	 * @throws InterruptedException If the thread is interrupted while sleeping
-	 */
-	private Response pollForResults(String sessionId)
-			throws InterruptedException {
-		Response response = null;
-		int attempts = 0;
-		Response previousResponse = null;
-		long pollIntervalMs = 50;
-
-		while (true) {
-			response = given()
-					.cookie("session_id", sessionId)
-					.when()
-					.get("/api/similarity/results");
-
-			if (response.getStatusCode() == 200 && !response.equals(previousResponse)) {
-				Log.info("New response received after " + attempts + " attempts, returning response");
-				// New response received, return the response
-				return response;
-			} else if (response.getStatusCode() == 202) {
-				// Still processing, wait and try again
-				attempts++;
-				Thread.sleep(pollIntervalMs);
-				pollIntervalMs += 50; // Increase pollIntervalMs by 50 ms
-				Log.info("Still processing, waiting for " + pollIntervalMs + " ms and trying again");
-			} else {
-
-				// Unexpected status code, return the response
-				return response;
-			}
-			previousResponse = response;
-		}
-	}
+	// Create new sample for multiple elements list
+	private static final String XML_SAMPLE_MULTIPLE_ELEMENTS = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n" +
+			"<document>\n" +
+			"\t<title>Introduction to the Topic</title>\n" +
+			"\t<title>Introduction of the Topic again</title>\n" +
+			"\t<content>\n" +
+			"\t\t<paragraph>This is a test paragraph with very similar content.</paragraph>\n" +
+			"\t\t<paragraph>This is another test paragraph showing similarity.</paragraph>\n" +
+			"\t</content>\n" +
+			"</document>";
 
 	@Test
 	public void testProcessXml() {
@@ -164,4 +139,36 @@ public class SimilarityResourceTest {
 				.extract()
 				.cookie("session_id");
 	}
+
+	
+	@Test
+	public void testEndToEndFlowMultipleElements() throws Exception {
+		// Test the full flow: submit XML and get results
+
+		// 1. Submit XML for processing
+		String sessionId = given()
+				.contentType(ContentType.XML)
+				.body(XML_SAMPLE_MULTIPLE_ELEMENTS)
+				.when()
+				.post("/api/similarity?elements=paragraph%20title")
+				.then()
+				.statusCode(202)
+				.extract()
+				.cookie("session_id");
+
+		assertNotNull(sessionId, "Session ID should not be null");
+
+		// 2. Poll for results using the session cookie
+		Response response = pollForResults(sessionId);
+
+		// 3. Verify the response
+		assertEquals(200, response.getStatusCode(), "Expected status code 200 after polling");
+		assertNotNull(response.getBody(), "Response body should not be null");
+		//
+		Log.info("Response body: " + response.getBody().asString());
+
+		int paragraphCount = getParagraphCount(response);
+		assertEquals(4, paragraphCount, "Expected 4 paragraphs in the response");
+	}
+
 }
