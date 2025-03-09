@@ -95,11 +95,14 @@ public class SimilarityProcessingService {
 				return;
 			}
 
+			// Session is already in PROCESSING state by default
+
 			// Check for empty XML content
 			if (xmlContent == null || xmlContent.trim().isEmpty()) {
 				LOG.warn("Empty XML content for session: " + sessionId);
 				// Still create an empty result to avoid null pointer exceptions
 				sessionData.addSimilarityGroup(new ArrayList<>());
+				sessionData.setProcessingStatus(SessionData.ProcessingStatus.COMPLETED);
 				return;
 			}
 
@@ -116,6 +119,7 @@ public class SimilarityProcessingService {
 				LOG.error("Error extracting sentences from XML for session: " + sessionId, e);
 				// Create an empty result to avoid null pointer exceptions
 				sessionData.addSimilarityGroup(new ArrayList<>());
+				sessionData.setProcessingStatus(SessionData.ProcessingStatus.ERROR);
 				return;
 			}
 
@@ -134,9 +138,16 @@ public class SimilarityProcessingService {
 			// Store similarity groups in session
 			similarityGroups.forEach(sessionData::addSimilarityGroup);
 
+			// Set processing status to completed
+			sessionData.setProcessingStatus(SessionData.ProcessingStatus.COMPLETED);
 			LOG.info("Completed processing for session: " + sessionId);
 		} catch (Exception e) {
 			LOG.error("Error processing XML for session: " + sessionId, e);
+			// Get session data and set error status
+			SessionData sessionData = sessionService.getSession(sessionId);
+			if (sessionData != null) {
+				sessionData.setProcessingStatus(SessionData.ProcessingStatus.ERROR);
+			}
 		}
 	}
 
@@ -154,5 +165,31 @@ public class SimilarityProcessingService {
 		}
 
 		return sessionData.getSimilaritySentenceGroups();
+	}
+
+	/**
+	 * Get the processing status for a session.
+	 * 
+	 * @param sessionId Session ID
+	 * @return Processing status or null if session not found
+	 */
+	public SessionData.ProcessingStatus getProcessingStatus(String sessionId) {
+		SessionData sessionData = sessionService.getSession(sessionId);
+		if (sessionData == null) {
+			LOG.debug("No session found for ID: " + sessionId);
+			return null;
+		}
+
+		return sessionData.getProcessingStatus();
+	}
+
+	/**
+	 * Get both the processing status and results for a session.
+	 * 
+	 * @param sessionId Session ID
+	 * @return SessionData or null if session not found
+	 */
+	public SessionData getSessionData(String sessionId) {
+		return sessionService.getSession(sessionId);
 	}
 }
