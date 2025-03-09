@@ -117,9 +117,10 @@ public class SimilarityResource {
 
 	/**
 	 * Retrieve similarity results using the session ID from the session cookie.
+	 * Supports polling - returns 202 Accepted if processing is still in progress.
 	 * 
 	 * @param sessionCookie Session cookie containing the session ID
-	 * @return Response with similarity groups or error
+	 * @return Response with similarity groups or processing status
 	 */
 	@GET
 	@Path("/results")
@@ -136,15 +137,45 @@ public class SimilarityResource {
 			}
 
 			String sessionId = sessionCookie.getValue();
-			List<List<String>> similarityGroups = similarityProcessingService.getSimilarityResults(sessionId);
 
-			if (similarityGroups == null) {
-				LOG.info("No results found for session: " + sessionId);
+			// Get the processing status
+			org.acme.semsim.model.SessionData.ProcessingStatus status = similarityProcessingService
+					.getProcessingStatus(sessionId);
+
+			if (status == null) {
+				LOG.info("No session found for ID: " + sessionId);
 				return Response.status(Response.Status.NOT_FOUND)
-						.entity(new ApiResponse("Results not found for this session or session expired.", null))
+						.entity(new ApiResponse("No results found for this session.", null))
 						.build();
 			}
 
+			// If still processing, return 202 Accepted
+			if (status == org.acme.semsim.model.SessionData.ProcessingStatus.PROCESSING) {
+				LOG.info("Processing still in progress for session: " + sessionId);
+				return Response.status(Response.Status.ACCEPTED)
+						.entity(new ApiResponse("Processing in progress. Please try again later.", sessionId))
+						.build();
+			}
+
+			// If error occurred during processing
+			if (status == org.acme.semsim.model.SessionData.ProcessingStatus.ERROR) {
+				LOG.warn("Processing error for session: " + sessionId);
+				return Response.status(Response.Status.INTERNAL_SERVER_ERROR)
+						.entity(new ApiResponse("An error occurred during processing.", sessionId))
+						.build();
+			}
+
+			// Processing is complete, get the results
+			List<List<String>> similarityGroups = similarityProcessingService.getSimilarityResults(sessionId);
+
+			if (similarityGroups == null || similarityGroups.isEmpty()) {
+				LOG.info("No results found for session: " + sessionId);
+				return Response.status(Response.Status.NOT_FOUND)
+						.entity(new ApiResponse("No similarity groups found for this session.", null))
+						.build();
+			}
+
+			LOG.info("Returning " + similarityGroups.size() + " similarity groups for session: " + sessionId);
 			return Response.ok(similarityGroups).build();
 
 		} catch (Exception e) {
