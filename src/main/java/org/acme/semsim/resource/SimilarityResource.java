@@ -11,6 +11,7 @@ import org.acme.semsim.service.SimilarityProcessingService;
 import org.jboss.logging.Logger;
 
 import java.util.List;
+import java.io.UnsupportedEncodingException;
 
 /**
  * REST API endpoint for similarity-related operations.
@@ -25,19 +26,6 @@ public class SimilarityResource {
 	SimilarityProcessingService similarityProcessingService;
 
 	/**
-	 * Submit an XML document for processing.
-	 * 
-	 * @param xmlContent The XML content to process
-	 * @return Response with a session cookie
-	 */
-	@POST
-	@Consumes(MediaType.APPLICATION_XML)
-	@Produces(MediaType.APPLICATION_JSON)
-	public Response processXml(String xmlContent) {
-		return processXml(xmlContent, null);
-	}
-
-	/**
 	 * Submit an XML document for processing with a specific XPath expression.
 	 * 
 	 * @param xmlContent The XML content to process
@@ -46,17 +34,22 @@ public class SimilarityResource {
 	 * @return Response with a session cookie
 	 */
 	@POST
-	@Path("/xpath")
 	@Consumes(MediaType.APPLICATION_XML)
 	@Produces(MediaType.APPLICATION_JSON)
 	public Response processXmlWithXPath(String xmlContent, @QueryParam("xpath") String xpath) {
 		try {
-			// URL decode the XPath expression if it's URL-encoded
-			if (xpath != null && xpath.contains("%")) {
+			// Always URL decode the XPath expression as we assume it's encoded
+			if (xpath != null) {
 				xpath = java.net.URLDecoder.decode(xpath, "UTF-8");
 				LOG.debug("Decoded XPath expression: " + xpath);
 			}
 			return processXml(xmlContent, xpath);
+		} catch (UnsupportedEncodingException e) {
+			LOG.error("Error decoding XPath expression: " + xpath, e);
+			return Response.status(Response.Status.BAD_REQUEST)
+					.entity(new ApiResponse("Error processing request.", "Error decoding XPath: " + e.getMessage(),
+							null))
+					.build();
 		} catch (Exception e) {
 			LOG.error("Error processing XPath expression: " + xpath, e);
 			return Response.status(Response.Status.INTERNAL_SERVER_ERROR)
