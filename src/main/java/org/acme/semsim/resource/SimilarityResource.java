@@ -37,23 +37,28 @@ public class SimilarityResource {
 	@POST
 	@Consumes(MediaType.APPLICATION_XML)
 	@Produces(MediaType.APPLICATION_JSON)
-	public Response processXmlWithXPath(String xmlContent, @QueryParam("xpath") @DefaultValue("p") String xpath) {
+	public Response processXmlWithXPath(String xmlContent, @QueryParam("xpath") @DefaultValue("p") String elements) {
 		try {
 			// Always URL decode the element names as we assume it's encoded
-			if (xpath != null) {
-				xpath = java.net.URLDecoder.decode(xpath, "UTF-8");
-				LOG.debug("Decoded element names: " + xpath);
+			if (elements != null) {
+				elements = java.net.URLDecoder.decode(elements, "UTF-8");
+				LOG.debug("Decoded element names: " + elements);
+				// Validate that the element name starts with a letter or '_', and contains only
+				// letters, digits, '-', '_', or '.'.
+				if (!elements.matches("^[a-zA-Z_][a-zA-Z0-9_-]*$")) {
+					throw new IllegalArgumentException(elements);
+				}
 			}
-			return processXml(xmlContent, xpath);
+			return processXml(xmlContent, elements);
 		} catch (UnsupportedEncodingException e) {
-			LOG.error("Error decoding element names: " + xpath, e);
+			LOG.error("Error decoding element names: " + elements, e);
 			return Response.status(Response.Status.BAD_REQUEST)
 					.entity(new ApiResponse("Error processing request.",
 							"Error decoding element names: " + e.getMessage(),
 							null))
 					.build();
 		} catch (Exception e) {
-			LOG.error("Error processing element names: " + xpath, e);
+			LOG.error("Error processing element names: " + elements, e);
 			return Response.status(Response.Status.INTERNAL_SERVER_ERROR)
 					.entity(new ApiResponse("Error processing request.", "Invalid element names: " + e.getMessage(),
 							null))
