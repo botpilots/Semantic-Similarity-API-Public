@@ -7,11 +7,8 @@ import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.NewCookie;
 import jakarta.ws.rs.core.Response;
 import org.acme.semsim.dto.ApiResponse;
-import org.acme.semsim.model.SessionData;
 import org.acme.semsim.service.SimilarityProcessingService;
 import org.jboss.logging.Logger;
-
-import io.quarkus.logging.Log;
 
 import java.util.List;
 import java.io.UnsupportedEncodingException;
@@ -102,10 +99,8 @@ public class SimilarityResource {
 						.build();
 			}
 
-			// Start processing and get a session ID
-			// NOTE: This is async, refer to GET /api/similarity/results to get processing
-			// status etc.
-			String sessionId = similarityProcessingService.startProcessing(xmlContent, elementNames);
+			// Start async xml processing and get a session ID
+			String sessionId = similarityProcessingService.startAsyncProcessing(xmlContent, elementNames);
 
 			// Create session cookie
 			NewCookie sessionCookie = new NewCookie.Builder(SESSION_COOKIE_NAME)

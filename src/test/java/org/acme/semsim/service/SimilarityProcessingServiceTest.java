@@ -31,9 +31,9 @@ public class SimilarityProcessingServiceTest {
 			"</document>";
 
 	@Test
-	public void testStartProcessing() {
+	public void testStartAsyncProcessing() {
 		// Test that processing starts and returns a session ID
-		String sessionId = similarityProcessingService.startProcessing(XML_SAMPLE);
+		String sessionId = similarityProcessingService.startAsyncProcessing(XML_SAMPLE);
 
 		assertNotNull(sessionId, "Session ID should not be null");
 		assertFalse(sessionId.isEmpty(), "Session ID should not be empty");
@@ -46,7 +46,7 @@ public class SimilarityProcessingServiceTest {
 	@Test
 	public void testGetSimilarityResults() throws Exception {
 		// Start processing
-		String sessionId = similarityProcessingService.startProcessing(XML_SAMPLE);
+		String sessionId = similarityProcessingService.startAsyncProcessing(XML_SAMPLE);
 
 		// Wait for processing to complete (since it's async)
 		Thread.sleep(250);
@@ -74,7 +74,7 @@ public class SimilarityProcessingServiceTest {
 	@Test
 	public void testProcessingWithEmptyXml() throws Exception {
 		// Test with empty XML
-		String sessionId = similarityProcessingService.startProcessing("");
+		String sessionId = similarityProcessingService.startAsyncProcessing("");
 
 		// Wait for processing to complete
 		Thread.sleep(250);

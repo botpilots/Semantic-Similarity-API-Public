@@ -42,8 +42,8 @@ public class SimilarityProcessingService {
 	 * @param xmlContent XML document content to process
 	 * @return Session ID to retrieve results later
 	 */
-	public String startProcessing(String xmlContent) {
-		return startProcessing(xmlContent, null);
+	public String startAsyncProcessing(String xmlContent) {
+		return startAsyncProcessing(xmlContent, null);
 	}
 
 	/**
@@ -56,10 +56,10 @@ public class SimilarityProcessingService {
 	 *                     from (null for default)
 	 * @return Session ID to retrieve results later
 	 */
-	public String startProcessing(String xmlContent, String elementNames) {
+	public String startAsyncProcessing(String xmlContent, String elementNames) {
 		// Create a new session
 		String sessionId = sessionService.createSession();
-		LOG.info("Starting XML processing for session: " + sessionId +
+		LOG.info("Starting XML async processing for session: " + sessionId +
 				(elementNames != null ? " with element names: " + elementNames : ""));
 
 		// Start async processing
