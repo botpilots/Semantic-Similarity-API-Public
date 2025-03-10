@@ -58,8 +58,8 @@ echo "Cookie file: $COOKIE_FILE"
 section "Trigger No Embeddings Generated Test"
 
 # 1. Submit an XML document for processing
-run_curl "curl -X POST -H \"Content-Type: application/xml\" --data-binary @samples/sample_xs.xml ${BASE_URL}/api/similarity -c ${COOKIE_FILE}"
-
+run_curl "curl -X POST -H \"Content-Type: application/xml\" --data-binary @samples/sample_xs.xml ${BASE_URL}/api/similarity?elements=p -c ${COOKIE_FILE}"
+sleep 1
 # 2. Retrieve similarity results
 run_curl "curl -X GET -b ${COOKIE_FILE} ${BASE_URL}/api/similarity/results"
 

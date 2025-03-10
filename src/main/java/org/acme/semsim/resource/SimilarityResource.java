@@ -19,6 +19,7 @@ import javax.xml.xpath.XPathExpressionException;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
+import java.util.UUID;
 
 import static org.acme.semsim.service.XmlProcessorService.*;
 
@@ -128,6 +129,32 @@ public class SimilarityResource {
 
 			String sessionId = sessionCookie.getValue();
 
+			if (sessionId == null) {
+				LOG.warn("Session ID missing in cookie");
+				return Response.status(Response.Status.BAD_REQUEST)
+						.entity(new ApiResponse(null,"Cookie was provided but Session ID could not be fetched from it, cookie might be invalid.", null))
+						.build();
+			}
+
+			if (sessionId.isEmpty()) {
+				LOG.warn("Session ID is empty in cookie");
+				return Response.status(Response.Status.BAD_REQUEST)
+						.entity(new ApiResponse(null,"Session ID is empty in cookie", null))
+						.build();
+			}
+
+			// Validate session ID as UUID
+			try {
+				UUID uuid = UUID.fromString(sessionId);
+				// Valid UUID format
+				// Process the session
+			} catch (IllegalArgumentException e) {
+				LOG.warn("Session ID was not in UUID format: " + sessionId);
+				return Response.status(Response.Status.BAD_REQUEST)
+						.entity(new ApiResponse(null,"Invalid session ID.", sessionId))
+						.build();
+			}
+
 			// Get the processing status
 			org.acme.semsim.model.SessionData.ProcessingStatus status = similarityProcessingService
 					.getProcessingStatus(sessionId);
@@ -166,7 +193,7 @@ public class SimilarityResource {
 										+
 										"for example: /api/similarity?elements=paragraph",
 								"No sentences found in XML. Revise elements query parameter or check data.",
-								null))
+								sessionId))
 						.build();
 			}
 
@@ -176,7 +203,7 @@ public class SimilarityResource {
 			if (similarityGroups == null) {
 				LOG.info("Session was not found: " + sessionId);
 				return Response.status(Response.Status.NOT_FOUND)
-						.entity(new ApiResponse("Session was not found.", null))
+						.entity(new ApiResponse("Session " + sessionId + " was not found in server records, might be expired, or never initialized.", null))
 						.build();
 			}
 
