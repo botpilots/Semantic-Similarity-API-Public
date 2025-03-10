@@ -32,7 +32,7 @@ public class SimilarityResource {
 	 * Submit an XML document for processing with specific element names.
 	 * 
 	 * @param xmlContent The XML content to process
-	 * @param xpath      A space-separated string of element names to extract text
+	 * @param elements      A space-separated string of element names to extract text
 	 *                   from (e.g., "p li div")
 	 *                   (default: "p")
 	 * @return Response with a session cookie
