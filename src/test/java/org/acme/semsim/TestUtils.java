@@ -15,8 +15,6 @@ public class TestUtils {
 	 * Polls the results endpoint until it returns a 200 status code or times out.
 	 * 
 	 * @param sessionId      The session ID to use for the request
-	 * @param maxAttempts    Maximum number of polling attempts
-	 * @param pollIntervalMs Time to wait between polling attempts in milliseconds
 	 * @return The response from the results endpoint
 	 * @throws InterruptedException If the thread is interrupted while sleeping
 	 */
