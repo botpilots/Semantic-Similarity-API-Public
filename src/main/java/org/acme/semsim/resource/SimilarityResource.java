@@ -99,7 +99,7 @@ public class SimilarityResource {
 					.build();
 
 		} catch (Exception e) {
-			LOG.error("Error processing XML", e);
+			LOG.error("error in createSimilarityGroups(): " + e.getMessage());
 			return Response.status(Response.Status.INTERNAL_SERVER_ERROR)
 					.entity(new ApiResponse("Internal server error.", e.getMessage(), null))
 					.build();
@@ -118,28 +118,20 @@ public class SimilarityResource {
 	@Produces(MediaType.APPLICATION_JSON)
 	public Response getSimilarityResults(@CookieParam(SimilarityProcessingService.SESSION_COOKIE_NAME) Cookie sessionCookie) {
 		try {
-			LOG.info("Received request for similarity results");
-
 			if (sessionCookie == null) {
-				LOG.warn("Session cookie missing");
+				LOG.warn("/results was requested but Session cookie was null");
 				return Response.status(Response.Status.BAD_REQUEST)
-						.entity(new ApiResponse(null,"Session cookie missing or invalid.", null))
+						.entity(new ApiResponse(null,"Session cookie was never sent.", null))
 						.build();
 			}
+			LOG.info("/results was requested with sessionid: " + sessionCookie.getValue());
 
 			String sessionId = sessionCookie.getValue();
 
-			if (sessionId == null) {
-				LOG.warn("Session ID missing in cookie");
-				return Response.status(Response.Status.BAD_REQUEST)
-						.entity(new ApiResponse(null,"Cookie was provided but Session ID could not be fetched from it, cookie might be invalid.", null))
-						.build();
-			}
-
 			if (sessionId.isEmpty()) {
-				LOG.warn("Session ID is empty in cookie");
+				LOG.warn("Session cookie's value was an empty string");
 				return Response.status(Response.Status.BAD_REQUEST)
-						.entity(new ApiResponse(null,"Session ID is empty in cookie", null))
+						.entity(new ApiResponse(null,"Session cookie's value was an empty string", null))
 						.build();
 			}
 
@@ -151,7 +143,7 @@ public class SimilarityResource {
 			} catch (IllegalArgumentException e) {
 				LOG.warn("Session ID was not in UUID format: " + sessionId);
 				return Response.status(Response.Status.BAD_REQUEST)
-						.entity(new ApiResponse(null,"Invalid session ID.", sessionId))
+						.entity(new ApiResponse(null,"Invalid session ID, not UUID format.", sessionId))
 						.build();
 			}
 
@@ -163,13 +155,13 @@ public class SimilarityResource {
 			if (status == null) {
 				LOG.info("No session found for ID: " + sessionId);
 				return Response.status(Response.Status.NOT_FOUND)
-						.entity(new ApiResponse(null,"No results found for this session.",null))
+						.entity(new ApiResponse(null,"No session found for ID: " + sessionId, null))
 						.build();
 			}
 
 			// If still processing, return 202 Accepted
 			if (status == org.acme.semsim.model.SessionData.ProcessingStatus.PROCESSING) {
-				LOG.info("Processing still in progress for session: " + sessionId);
+				LOG.info("A results request was made but processing was still in progress for session: " + sessionId);
 				return Response.status(Response.Status.ACCEPTED)
 						.entity(new ApiResponse("Processing in progress. Please try again later.", sessionId))
 						.build();
@@ -177,7 +169,7 @@ public class SimilarityResource {
 
 			// If error occurred during processing, return 500 Internal Server Error
 			if (status == org.acme.semsim.model.SessionData.ProcessingStatus.ERROR) {
-				LOG.warn("Processing error for session: " + sessionId);
+				LOG.warn("A results request was made but an error had occurred during processing for session: " + sessionId);
 				return Response.status(Response.Status.INTERNAL_SERVER_ERROR)
 						.entity(new ApiResponse("An error occurred during processing.", sessionId))
 						.build();
@@ -201,13 +193,10 @@ public class SimilarityResource {
 			List<List<String>> similarityGroups = similarityProcessingService.getSimilarityResults(sessionId);
 
 			if (similarityGroups == null) {
-				LOG.info("Session was not found: " + sessionId);
-				return Response.status(Response.Status.NOT_FOUND)
-						.entity(new ApiResponse("Session " + sessionId + " was not found in server records, might be expired, or never initialized.", null))
-						.build();
+				LOG.warn("Unexpected error! Similarity groups was null for " + sessionId);;
 			}
 
-			if (similarityGroups.isEmpty()) {
+			if (similarityGroups == null || similarityGroups.isEmpty()) {
 				LOG.info("Processing completed but no similarity groups were created for this session: " + sessionId);
 				return Response.ok()
 						.entity(new ApiResponse(
