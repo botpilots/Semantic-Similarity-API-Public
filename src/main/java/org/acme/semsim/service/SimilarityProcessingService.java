@@ -64,6 +64,8 @@ public class SimilarityProcessingService {
 
 		// Start async processing
 		CompletableFuture.runAsync(() -> processXmlContent(sessionId, xmlContent, elementNames), processingExecutor)
+				// TODO: Rename to "unknown error in method processXmlContent()" and add more
+				// specific handling inside method."
 				.exceptionally(ex -> {
 					LOG.error("Error processing XML for session " + sessionId, ex);
 					return null;

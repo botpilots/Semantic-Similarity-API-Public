@@ -79,6 +79,7 @@ public class SimilarityResource {
 			if (xmlContent == null || xmlContent.trim().isEmpty()) {
 				LOG.warn("Received empty XML content");
 				return Response.status(Response.Status.BAD_REQUEST)
+						// TODO: Add a more specific error message, what is invalid about the XML?
 						.entity(new ApiResponse("Error processing request.", "XML content is empty or invalid", null))
 						.build();
 			}
@@ -95,6 +96,7 @@ public class SimilarityResource {
 			} catch (Exception e) {
 				LOG.warn("Invalid XML content: " + e.getMessage());
 				return Response.status(Response.Status.INTERNAL_SERVER_ERROR)
+						// TODO: Add a more specific error message, what type of validation failed?
 						.entity(new ApiResponse("Error processing request.", "Invalid XML: " + e.getMessage(), null))
 						.build();
 			}
