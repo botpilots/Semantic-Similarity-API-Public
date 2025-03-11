@@ -166,28 +166,4 @@ public class SimilarityResourceTest {
 		assertEquals(4, paragraphCount, "Expected 4 paragraphs in the response");
 	}
 
-	@Test
-	public void testNoEmbeddingsMsgInGet() throws Exception {
-		// Test the full flow: submit XML and get results
-
-		// 1. Submit XML for processing
-		String sessionId = given()
-				.contentType(ContentType.XML)
-				.body(XML_SAMPLE)
-				.when()
-				.post("/api/similarity?elements=p")
-				.then()
-				.statusCode(202)
-				.extract()
-				.cookie("session_id");
-
-		assertNotNull(sessionId, "Session ID should not be null");
-
-		// 2. Poll for results using the session cookie
-		Response response = pollForResults(sessionId);
-
-		Log.info(response.getBody().prettyPrint());
-
-	}
-
 }

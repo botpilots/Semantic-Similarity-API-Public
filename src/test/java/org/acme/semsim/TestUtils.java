@@ -57,6 +57,7 @@ public class TestUtils {
 	 * @param response The response to get the paragraph count from
 	 * @return The number of paragraphs in the response
 	 */
+	// TODO: Update when response body updates with more properties.
 	public static int getParagraphCount(Response response) {
 		Pattern paragraphPattern = Pattern.compile("\"(.*?)\"");
 		Matcher matcher = paragraphPattern.matcher(response.getBody().asString());
