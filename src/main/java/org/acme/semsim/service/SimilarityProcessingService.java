@@ -7,6 +7,7 @@ import org.acme.semsim.model.Sentence;
 import org.acme.semsim.model.SessionData;
 import org.jboss.logging.Logger;
 import org.w3c.dom.Document;
+import org.w3c.dom.Text;
 import org.xml.sax.SAXException;
 
 import javax.xml.parsers.ParserConfigurationException;
@@ -21,8 +22,8 @@ import java.util.concurrent.Executors;
 import static org.acme.semsim.service.XmlProcessorService.createWorkingCopy;
 
 /**
- * Main service that orchestrates XML processing, sentence vectorization, and
- * similarity grouping.
+ * This class holds the upper business logic for the /api/similarity endpoint.
+ * A main service that orchestrating Text extraction, embeddings generation, and similarity grouping.
  */
 @ApplicationScoped
 public class SimilarityProcessingService {
@@ -40,12 +41,13 @@ public class SimilarityProcessingService {
 	EmbeddingService embeddingService;
 
 	@Inject
-	SimilarityService similarityService;
+	GroupingService groupingService;
 
 	@Inject
 	SessionService sessionService;
 
 	/**
+	 *
 	 * Process an XML document and find similarity groups using specific element
 	 * names.
 	 * This method starts asynchronous processing and returns a session ID.
@@ -55,6 +57,7 @@ public class SimilarityProcessingService {
 	 *                     from (null for default)
 	 * @return SessionCookie with sessionId to retrieve results later
 	 */
+	// TODO: Overload method that accepts a session cookie, so several XML documents can be processed in same session.
 	public NewCookie startAsyncProcessing(String xmlContent, String elementNames) throws XPathExpressionException, ParserConfigurationException, IOException, SAXException {
 		LOG.info("Creating groups for XML document with element names: " + elementNames);
 
@@ -69,7 +72,7 @@ public class SimilarityProcessingService {
 		// Start async processing
 		CompletableFuture.runAsync(() -> processXmlContent(sessionId, document, elementNames), processingExecutor)
 				// TODO: Rename to "unknown error in method processXmlContent()" and add more
-				// specific handling inside method."
+				// specific handling inside method.
 				.exceptionally(ex -> {
 					LOG.error("Error processing XML for session " + sessionId, ex);
 					return null;
@@ -84,116 +87,58 @@ public class SimilarityProcessingService {
 	}
 
 	/**
-	 * Process XML content and store results in the session.
-	 */
-	private void processXmlContent(String sessionId, Document document) {
-		processXmlContent(sessionId, document, null);
-	}
-
-	/**
 	 * Process XML content with specific element names and store results in the
 	 * session.
+	 *
 	 */
 	private void processXmlContent(String sessionId, Document document, String elementNames) {
+
+		// Get session data, session is already in PROCESSING state by default
+		SessionData sessionData = sessionService.getSession(sessionId);
+		if (sessionData == null) {
+			LOG.warn("Session not found or expired: " + sessionId);
+			return;
+		}
 		try {
+			// Initialize similarityGroup, allowed to be still empty after processing
+			// TODO: Should be a custom object that can hold several Text objects.
+			List<List<String>> similarityGroups;
+
 			LOG.debug("Processing XML for session: " + sessionId +
 					(elementNames != null ? " with element names: " + elementNames : ""));
 
-			// Get session data, session is already in PROCESSING state by default
-			SessionData sessionData = sessionService.getSession(sessionId);
-			if (sessionData == null) {
-				LOG.warn("Session not found or expired: " + sessionId);
-				return;
-			}
 
 			// 1. Extract text elements from XML
-			List<String> textElements;
-			try {
-                textElements = xmlProcessorService.extractElementTextFromXml(document, elementNames);
-				LOG.info("Extracted " + textElements.size() + " text elements from XML for session " + sessionId);
-			} catch (Exception e) {
-				LOG.error("Error extracting text from XML for session: " + sessionId, e);
-				// Create an empty result to avoid null pointer exceptions
-				sessionData.addSimilarityGroup(new ArrayList<>());
-				sessionData.setProcessingStatus(SessionData.ProcessingStatus.ERROR);
+			// TODO: extractTextElements should return a list of Text inheriting from Text, that has the added fields for 1. amount of duplicates found for that text in Document and 2. the embedding vector.
+			List<String> textElements = xmlProcessorService.extractTextElements(document, elementNames);
+			LOG.info("Extracted " + textElements.size() + " text elements from XML for session " + sessionId);
+			if (textElements.isEmpty()) {
+				LOG.warn("No textElements extracted for session: " + sessionId);
+				sessionData.setProcessingStatus(SessionData.ProcessingStatus.NO_TEXT_EXTRACTED);
 				return;
 			}
 
-			// 2. Generate embeddings for sentences
-			List<Sentence> sentencesWithEmbeddings = embeddingService.generateEmbeddings(textElements);
-			LOG.info("Generated embeddings for " + sentencesWithEmbeddings.size() +
+			// 2. Generate and store embeddings in session
+			// TODO: Modify Sentence to custom Text object, embeddings should be stored in that object.
+			List<Sentence> textContentWithEmbeddings = embeddingService.generateEmbeddings(textElements);
+			LOG.info("Generated embeddings for " + textContentWithEmbeddings.size() +
 					" sentences for session " + sessionId);
+			textContentWithEmbeddings.forEach(sessionData::addSentence);
 
-			if (sentencesWithEmbeddings.isEmpty()) {
-				LOG.warn("No embeddings generated for session: " + sessionId);
-				sessionData.setProcessingStatus(SessionData.ProcessingStatus.NO_EMBEDDINGS_GENERATED);
-				return;
-			}
-
-			// Store sentences with embeddings in session
-			sentencesWithEmbeddings.forEach(sessionData::addSentence);
-
-			// 3. Group similar sentences
-			// TODO: Create a class for the similarity groups with metadata about the group
-			// such as its similarity score, etc.
-			List<List<String>> similarityGroups = similarityService.groupSimilarSentences(sentencesWithEmbeddings);
+			// 3. Group and store similarity groups in session
+			// TODO: Create a class for the similarity groups with metadata about the group such as its similarity score, etc.
+			similarityGroups = groupingService.group(textContentWithEmbeddings);
 			LOG.info("Found " + similarityGroups.size() + " similarity groups for session " + sessionId);
-
-			// Store similarity groups in session
 			similarityGroups.forEach(sessionData::addSimilarityGroup);
 
 			// Set processing status to completed
 			sessionData.setProcessingStatus(SessionData.ProcessingStatus.COMPLETED);
 			LOG.info("Completed processing for session: " + sessionId);
+
 		} catch (Exception e) {
-			LOG.error("Error processing XML for session: " + sessionId, e);
-			// Get session data and set error status
-			SessionData sessionData = sessionService.getSession(sessionId);
-			if (sessionData != null) {
-				sessionData.setProcessingStatus(SessionData.ProcessingStatus.ERROR);
-			}
+			LOG.error("processXmlContent() failed: " + e.getMessage());
+			sessionData.setProcessingStatus(SessionData.ProcessingStatus.ERROR);
 		}
 	}
 
-	/**
-	 * Retrieve the similarity results for a session.
-	 * 
-	 * @param sessionId Session ID
-	 * @return List of similar sentence groups, or null if session not found
-	 */
-	public List<List<String>> getSimilarityResults(String sessionId) {
-		SessionData sessionData = sessionService.getSession(sessionId);
-		if (sessionData == null) {
-			LOG.debug("No results found for session: " + sessionId);
-			return null;
-		}
-
-		return sessionData.getSimilaritySentenceGroups();
-	}
-
-	/**
-	 * Get the processing status for a session.
-	 * 
-	 * @param sessionId Session ID
-	 * @return Processing status or null if session not found
-	 */
-	public SessionData.ProcessingStatus getProcessingStatus(String sessionId) {
-		SessionData sessionData = sessionService.getSession(sessionId);
-		if (sessionData == null) {
-			LOG.debug("No session found for ID: " + sessionId);
-			return null;
-		}
-
-		return sessionData.getProcessingStatus();
-	}
-
-	/**
-	 * Get both the processing status and results for a session.
-	 * 
-	 * @param sessionId Session ID
-	 * @return SessionData or null if session not found
-	 */
-	public SessionData getSessionData(String sessionId) {
-		return sessionService.getSession(sessionId);
-	}
 }

@@ -15,9 +15,9 @@ import java.util.Set;
  * Service for grouping similar sentences based on their vector embeddings.
  */
 @ApplicationScoped
-public class SimilarityService {
+public class GroupingService {
 
-	private static final Logger LOG = Logger.getLogger(SimilarityService.class);
+	private static final Logger LOG = Logger.getLogger(GroupingService.class);
 
 	@Inject
 	EmbeddingService embeddingService;
@@ -31,7 +31,8 @@ public class SimilarityService {
 	 * @param sentences List of sentences with their vector embeddings
 	 * @return List of lists of similar sentences (groups)
 	 */
-	public List<List<String>> groupSimilarSentences(List<Sentence> sentences) {
+	// TODO: Should return a ArrayList holding the custom Text objects.
+	public List<List<String>> group(List<Sentence> sentences) {
 		LOG.debug("Grouping " + sentences.size() + " sentences with similarity threshold " + similarityThreshold);
 
 		List<List<String>> groups = new ArrayList<>();
@@ -39,10 +40,15 @@ public class SimilarityService {
 
 		for (int i = 0; i < sentences.size(); i++) {
 			if (processedIndices.contains(i)) {
-				continue; // Skip already processed sentences
+				continue; // Skip creating a new group for an already processed sentence
 			}
 
 			Sentence currentSentence = sentences.get(i);
+			// TODO: Change to custom Group object that holds custom Text objects, as well holds info about:
+			//  1. the original sentence all other sentences were compared to.
+			//  2. the similarity score for each sentence except the first one.
+			//  3. average similarity score for the group.
+			//  4. some kind of statistical score telling about how distributed the similarity scores are (e.g. a high or low score would mean very similar sentences within that group)
 			List<String> similarSentences = new ArrayList<>();
 			similarSentences.add(currentSentence.getText());
 			processedIndices.add(i);

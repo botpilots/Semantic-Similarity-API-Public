@@ -7,6 +7,14 @@ import java.util.List;
 /**
  * Represents a session's data, including timestamp and similarity groups.
  */
+// TODO: Complement this class with the following:
+// - field GroupsFound: Number of groups found
+// - field candidatesToRemove: The number of sentences minus the number of groups
+//   (i.e. the number of sentences that could potentially be removed as unique ones from
+//   the original document), as a number.
+//   - Make it store TextDuplicatesGroup objects instead of List<String> objects.
+//   - Make it store TextDuplicates instead of Sentences objects.
+// - similarity threshold used at processing.
 public class SessionData {
 	private final String sessionId;
 	private final Instant timestamp;
@@ -18,7 +26,7 @@ public class SessionData {
 		PROCESSING,
 		COMPLETED,
 		ERROR,
-		NO_EMBEDDINGS_GENERATED
+		NO_TEXT_EXTRACTED
 	}
 
 	public SessionData(String sessionId) {

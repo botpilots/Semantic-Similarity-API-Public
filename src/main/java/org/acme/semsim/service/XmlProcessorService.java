@@ -1,6 +1,5 @@
 package org.acme.semsim.service;
 
-import io.quarkus.logging.Log;
 import jakarta.enterprise.context.ApplicationScoped;
 import org.jboss.logging.Logger;
 import org.w3c.dom.Attr;
@@ -35,7 +34,7 @@ public class XmlProcessorService {
 	 * @return List of extracted text content
 	 * @throws Exception if XML parsing fails
 	 */
-	public List<String> extractElementTextFromXml(Document document, String elementNames) throws Exception {
+	public List<String> extractTextElements(Document document, String elementNames) throws Exception {
 		LOG.debug("Processing XML document with element names: " + elementNames);
 
 		List<String> extractedTexts = new ArrayList<>();

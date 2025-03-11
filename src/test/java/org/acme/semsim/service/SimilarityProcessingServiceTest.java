@@ -49,32 +49,4 @@ public class SimilarityProcessingServiceTest {
 		assertNotNull(sessionData, "Session data should exist");
 	}
 
-	@Test
-	public void testGetSimilarityResults() throws Exception {
-		// Start processing
-		NewCookie cookie = similarityProcessingService.startAsyncProcessing(XML_SAMPLE, "paragraph");
-
-		// Wait for processing to complete (since it's async)
-		Thread.sleep(250);
-
-		// Get results
-		List<List<String>> results = similarityProcessingService.getSimilarityResults(cookie.getValue());
-
-		assertNotNull(results, "Results should not be null");
-
-		// With the new behavior, results may be empty if no sentences are similar
-		// enough
-		// to be grouped together or if all groups have only one sentence
-		// We're just checking that the results object exists and is properly
-		// initialized
-	}
-
-	@Test
-	public void testGetSimilarityResultsWithInvalidSession() {
-		// Test with an invalid session ID
-		List<List<String>> results = similarityProcessingService.getSimilarityResults("invalid-session-id");
-
-		assertNull(results, "Results should be null for invalid session");
-	}
-
 }

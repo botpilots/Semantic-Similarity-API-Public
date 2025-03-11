@@ -7,21 +7,13 @@ import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.NewCookie;
 import jakarta.ws.rs.core.Response;
 import org.acme.semsim.dto.ApiResponse;
+import org.acme.semsim.service.SessionService;
 import org.acme.semsim.service.SimilarityProcessingService;
-import org.acme.semsim.service.XmlProcessorService;
 import org.jboss.logging.Logger;
-import org.w3c.dom.Document;
-import org.w3c.dom.NodeList;
-import org.xml.sax.SAXException;
 
-import javax.xml.parsers.ParserConfigurationException;
-import javax.xml.xpath.XPathExpressionException;
-import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.UUID;
-
-import static org.acme.semsim.service.XmlProcessorService.*;
 
 /**
  * REST API endpoint for similarity-related operations.
@@ -33,6 +25,9 @@ public class SimilarityResource {
 
 	@Inject
 	SimilarityProcessingService similarityProcessingService;
+
+	@Inject
+	SessionService sessionService;
 
 	/**
 	 * Submit an XML document for processing with specific element names.
@@ -116,7 +111,7 @@ public class SimilarityResource {
 	@GET
 	@Path("/results")
 	@Produces(MediaType.APPLICATION_JSON)
-	public Response getSimilarityResults(@CookieParam(SimilarityProcessingService.SESSION_COOKIE_NAME) Cookie sessionCookie) {
+	public Response apiSimilarityResults(@CookieParam(SimilarityProcessingService.SESSION_COOKIE_NAME) Cookie sessionCookie) {
 		try {
 			if (sessionCookie == null) {
 				LOG.warn("/results was requested but Session cookie was null");
@@ -147,50 +142,62 @@ public class SimilarityResource {
 						.build();
 			}
 
-			// Get the processing status
-			org.acme.semsim.model.SessionData.ProcessingStatus status = similarityProcessingService
-					.getProcessingStatus(sessionId);
+			// Get session
+			org.acme.semsim.model.SessionData sessionData = sessionService.getSession(sessionId);
 
 			// If no session found, return 404 Not Found
-			if (status == null) {
+			if (sessionData == null) {
 				LOG.info("No session found for ID: " + sessionId);
 				return Response.status(Response.Status.NOT_FOUND)
 						.entity(new ApiResponse(null,"No session found for ID: " + sessionId, null))
 						.build();
 			}
 
-			// If still processing, return 202 Accepted
-			if (status == org.acme.semsim.model.SessionData.ProcessingStatus.PROCESSING) {
-				LOG.info("A results request was made but processing was still in progress for session: " + sessionId);
-				return Response.status(Response.Status.ACCEPTED)
-						.entity(new ApiResponse("Processing in progress. Please try again later.", sessionId))
+			// Check processing status
+			org.acme.semsim.model.SessionData.ProcessingStatus status = sessionData.getProcessingStatus();
+
+			// Handle cases based on processing status
+			Response.Status responseStatus;
+			String message = null;
+			String error = null;
+
+			switch (status) {
+			    case PROCESSING -> {
+			        LOG.info("A results request was made but processing was still in progress for session: " + sessionId);
+			        responseStatus = Response.Status.ACCEPTED;
+			        message = "Processing in progress. Please try again later.";
+			    }
+			    case ERROR -> {
+			        LOG.warn("A results request was made but an error had occurred during processing for session: " + sessionId);
+			        responseStatus = Response.Status.INTERNAL_SERVER_ERROR;
+			        message = "An error occurred during processing.";
+			    }
+			    case NO_TEXT_EXTRACTED -> {
+			        responseStatus = Response.Status.BAD_REQUEST;
+			        message = "No embeddings were generated. This may be because no matching elements were found in your XML. " +
+			                "The default element is 'p'. If your XML uses different elements, please specify them using the 'elements' query parameter, " +
+			                "for example: /api/similarity?elements=paragraph";
+			        error = "No sentences found in XML. Revise elements query parameter or check data.";
+			    }
+				// Assume COMPLETED will always be the default case
+				default -> {
+					// Log a warning if the status is not COMPLETED
+					if (status != org.acme.semsim.model.SessionData.ProcessingStatus.COMPLETED) {
+						LOG.warn("Unexpected processing status! Should have been COMPLETED but was: " + status);
+					}
+					responseStatus = Response.Status.OK;
+				}
+			}
+
+			// Return if not completed
+			if (responseStatus != Response.Status.OK) {
+				return Response.status(responseStatus)
+						.entity(new ApiResponse(message, error, sessionId))
 						.build();
 			}
 
-			// If error occurred during processing, return 500 Internal Server Error
-			if (status == org.acme.semsim.model.SessionData.ProcessingStatus.ERROR) {
-				LOG.warn("A results request was made but an error had occurred during processing for session: " + sessionId);
-				return Response.status(Response.Status.INTERNAL_SERVER_ERROR)
-						.entity(new ApiResponse("An error occurred during processing.", sessionId))
-						.build();
-			}
-
-			// If no embeddings were generated, return a bad request
-			if (status == org.acme.semsim.model.SessionData.ProcessingStatus.NO_EMBEDDINGS_GENERATED) {
-				return Response.status(Response.Status.BAD_REQUEST)
-						.entity(new ApiResponse(
-								"No embeddings were generated. This may be because no matching elements were found in your XML. "
-										+
-										"The default element is 'p'. If your XML uses different elements, please specify them using the 'elements' query parameter, "
-										+
-										"for example: /api/similarity?elements=paragraph",
-								"No sentences found in XML. Revise elements query parameter or check data.",
-								sessionId))
-						.build();
-			}
-
-			// Processing is complete, get the results
-			List<List<String>> similarityGroups = similarityProcessingService.getSimilarityResults(sessionId);
+			// Continue with normal processing
+			List<List<String>> similarityGroups = sessionData.getSimilaritySentenceGroups();
 
 			if (similarityGroups == null) {
 				LOG.warn("Unexpected error! Similarity groups was null for " + sessionId);;
@@ -198,20 +205,20 @@ public class SimilarityResource {
 
 			if (similarityGroups == null || similarityGroups.isEmpty()) {
 				LOG.info("Processing completed but no similarity groups were created for this session: " + sessionId);
-				return Response.ok()
-						.entity(new ApiResponse(
-								"Processing completed but no similarity groups were created for this session.",
-								sessionId))
-						.build();
+				message = "Processing completed but no similarity groups were created for this session.";
+			} else {
+				LOG.info("Returning " + similarityGroups.size() + " similarity groups for session: " + sessionId);
 			}
 
-			LOG.info("Returning " + similarityGroups.size() + " similarity groups for session: " + sessionId);
-			return Response.ok(similarityGroups).build();
+			// Return the ok response with status and message and the similarityGroups
+			return Response.ok()
+					.entity(new ApiResponse(message, error, sessionId, similarityGroups))
+					.build();
 
 		} catch (Exception e) {
 			LOG.error("Error retrieving similarity results", e);
 			return Response.status(Response.Status.INTERNAL_SERVER_ERROR)
-					.entity(new ApiResponse("Internal server error.", e.getMessage(), null))
+					.entity(new ApiResponse(e.getMessage(), null))
 					.build();
 		}
 	}

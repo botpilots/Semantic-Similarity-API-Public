@@ -6,19 +6,18 @@ import org.acme.semsim.model.Sentence;
 import org.junit.jupiter.api.Test;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
 
 @QuarkusTest
-public class SimilarityServiceTest {
+public class GroupingServiceTest {
 
 	@Inject
-	SimilarityService similarityService;
+	GroupingService groupingService;
 
 	@Test
-	public void testGroupSimilarSentences() {
+	public void testGroup() {
 		// Create test sentences with embeddings that are clearly different
 		List<Sentence> sentences = new ArrayList<>();
 
@@ -31,7 +30,7 @@ public class SimilarityServiceTest {
 		sentences.add(new Sentence("Another different sentence", new double[] { -0.9, -0.8, -0.7 }));
 
 		// Group similar sentences
-		List<List<String>> groups = similarityService.groupSimilarSentences(sentences);
+		List<List<String>> groups = groupingService.group(sentences);
 
 		// Verify results
 		assertNotNull(groups, "Groups should not be null");
@@ -53,7 +52,7 @@ public class SimilarityServiceTest {
 		// Test with empty input
 		List<Sentence> emptySentences = new ArrayList<>();
 
-		List<List<String>> groups = similarityService.groupSimilarSentences(emptySentences);
+		List<List<String>> groups = groupingService.group(emptySentences);
 
 		assertNotNull(groups, "Groups should not be null even with empty input");
 		assertTrue(groups.isEmpty(), "Groups should be empty with empty input");
@@ -65,7 +64,7 @@ public class SimilarityServiceTest {
 		List<Sentence> singleSentence = new ArrayList<>();
 		singleSentence.add(new Sentence("Single sentence", new double[] { 0.1, 0.2, 0.3 }));
 
-		List<List<String>> groups = similarityService.groupSimilarSentences(singleSentence);
+		List<List<String>> groups = groupingService.group(singleSentence);
 
 		assertNotNull(groups, "Groups should not be null");
 		assertTrue(groups.size() >= 0, "Should have zero or more groups");

@@ -1,11 +1,21 @@
 package org.acme.semsim.model;
 
+import org.w3c.dom.Node;
+
 import java.util.Arrays;
 import java.util.Objects;
 
 /**
  * Represents a sentence with its text content and vector embedding.
  */
+// TODO: Change name to ElementDuplicates, and ensure the following functionality:
+// - Store Text objects having same text content
+// - Store embedded vector for that text content
+// - Store its similarity score coupled with the
+//   associated textDuplicatesGroup id, in a hashmap. Retrievable with a get method.
+// - Store if it were the standardMeasure for some
+//   GroupId.
+// - an uuid for each ElementDuplicates instance.
 public class Sentence {
 	private String text;
 	private double[] vector;
