@@ -15,8 +15,6 @@ public class TestUtils {
 	 * Polls the results endpoint until it returns a 200 status code or times out.
 	 * 
 	 * @param sessionId      The session ID to use for the request
-	 * @param maxAttempts    Maximum number of polling attempts
-	 * @param pollIntervalMs Time to wait between polling attempts in milliseconds
 	 * @return The response from the results endpoint
 	 * @throws InterruptedException If the thread is interrupted while sleeping
 	 */
@@ -59,6 +57,7 @@ public class TestUtils {
 	 * @param response The response to get the paragraph count from
 	 * @return The number of paragraphs in the response
 	 */
+	// TODO: Update when response body updates with more properties.
 	public static int getParagraphCount(Response response) {
 		Pattern paragraphPattern = Pattern.compile("\"(.*?)\"");
 		Matcher matcher = paragraphPattern.matcher(response.getBody().asString());

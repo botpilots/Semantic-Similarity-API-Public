@@ -2,15 +2,23 @@ package org.acme.semsim.service;
 
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
+import jakarta.ws.rs.core.NewCookie;
 import org.acme.semsim.model.Sentence;
 import org.acme.semsim.model.SessionData;
 import org.jboss.logging.Logger;
+import org.w3c.dom.Document;
+import org.xml.sax.SAXException;
 
+import javax.xml.parsers.ParserConfigurationException;
+import javax.xml.xpath.XPathExpressionException;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
+
+import static org.acme.semsim.service.XmlProcessorService.createWorkingCopy;
 
 /**
  * Main service that orchestrates XML processing, sentence vectorization, and
@@ -22,6 +30,8 @@ public class SimilarityProcessingService {
 	private static final Logger LOG = Logger.getLogger(SimilarityProcessingService.class);
 
 	private final Executor processingExecutor = Executors.newFixedThreadPool(2);
+
+	public static final String SESSION_COOKIE_NAME = "session_id";
 
 	@Inject
 	XmlProcessorService xmlProcessorService;
@@ -36,17 +46,6 @@ public class SimilarityProcessingService {
 	SessionService sessionService;
 
 	/**
-	 * Process an XML document and find similarity groups.
-	 * This method starts asynchronous processing and returns a session ID.
-	 * 
-	 * @param xmlContent XML document content to process
-	 * @return Session ID to retrieve results later
-	 */
-	public String startProcessing(String xmlContent) {
-		return startProcessing(xmlContent, null);
-	}
-
-	/**
 	 * Process an XML document and find similarity groups using specific element
 	 * names.
 	 * This method starts asynchronous processing and returns a session ID.
@@ -54,62 +53,63 @@ public class SimilarityProcessingService {
 	 * @param xmlContent   XML document content to process
 	 * @param elementNames Space-separated string of element names to extract text
 	 *                     from (null for default)
-	 * @return Session ID to retrieve results later
+	 * @return SessionCookie with sessionId to retrieve results later
 	 */
-	public String startProcessing(String xmlContent, String elementNames) {
+	public NewCookie startAsyncProcessing(String xmlContent, String elementNames) throws XPathExpressionException, ParserConfigurationException, IOException, SAXException {
+		LOG.info("Creating groups for XML document with element names: " + elementNames);
+
+		// First create a working copy of the XML document with added attributes
+		Document document = createWorkingCopy(xmlContent, elementNames);
+
 		// Create a new session
 		String sessionId = sessionService.createSession();
-		LOG.info("Starting XML processing for session: " + sessionId +
+		LOG.info("Starting XML async processing for session: " + sessionId +
 				(elementNames != null ? " with element names: " + elementNames : ""));
 
 		// Start async processing
-		CompletableFuture.runAsync(() -> processXmlContent(sessionId, xmlContent, elementNames), processingExecutor)
+		CompletableFuture.runAsync(() -> processXmlContent(sessionId, document, elementNames), processingExecutor)
+				// TODO: Rename to "unknown error in method processXmlContent()" and add more
+				// specific handling inside method."
 				.exceptionally(ex -> {
 					LOG.error("Error processing XML for session " + sessionId, ex);
 					return null;
 				});
 
-		return sessionId;
+		// Create session cookie from session ID
+		return new NewCookie.Builder(SESSION_COOKIE_NAME)
+                .value(sessionId)
+                .path("/")
+                .httpOnly(true)
+                .build();
 	}
 
 	/**
 	 * Process XML content and store results in the session.
 	 */
-	private void processXmlContent(String sessionId, String xmlContent) {
-		processXmlContent(sessionId, xmlContent, null);
+	private void processXmlContent(String sessionId, Document document) {
+		processXmlContent(sessionId, document, null);
 	}
 
 	/**
 	 * Process XML content with specific element names and store results in the
 	 * session.
 	 */
-	private void processXmlContent(String sessionId, String xmlContent, String elementNames) {
+	private void processXmlContent(String sessionId, Document document, String elementNames) {
 		try {
 			LOG.debug("Processing XML for session: " + sessionId +
 					(elementNames != null ? " with element names: " + elementNames : ""));
 
-			// Get session data
+			// Get session data, session is already in PROCESSING state by default
 			SessionData sessionData = sessionService.getSession(sessionId);
 			if (sessionData == null) {
 				LOG.warn("Session not found or expired: " + sessionId);
 				return;
 			}
 
-			// Session is already in PROCESSING state by default
-
-			// Check for empty XML content
-			if (xmlContent == null || xmlContent.trim().isEmpty()) {
-				LOG.warn("Empty XML content for session: " + sessionId);
-				// Still create an empty result to avoid null pointer exceptions
-				sessionData.addSimilarityGroup(new ArrayList<>());
-				sessionData.setProcessingStatus(SessionData.ProcessingStatus.COMPLETED);
-				return;
-			}
-
 			// 1. Extract text elements from XML
 			List<String> textElements;
 			try {
-				textElements = xmlProcessorService.extractElementTextFromXml(xmlContent, elementNames);
+                textElements = xmlProcessorService.extractElementTextFromXml(document, elementNames);
 				LOG.info("Extracted " + textElements.size() + " text elements from XML for session " + sessionId);
 			} catch (Exception e) {
 				LOG.error("Error extracting text from XML for session: " + sessionId, e);

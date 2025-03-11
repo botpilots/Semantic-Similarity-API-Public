@@ -6,11 +6,6 @@ import io.restassured.http.ContentType;
 import io.restassured.response.Response;
 import org.junit.jupiter.api.Test;
 
-import java.util.List;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
-import java.util.regex.Pattern;
-
 import static org.acme.semsim.TestUtils.pollForResults;
 import static org.acme.semsim.TestUtils.getParagraphCount;
 import static io.restassured.RestAssured.given;
