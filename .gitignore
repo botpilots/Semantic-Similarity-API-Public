@@ -45,3 +45,6 @@ nb-configuration.xml
 .certs/
 
 cookie.txt
+
+# Hide obsidian devspec folder
+docs/devspec/
