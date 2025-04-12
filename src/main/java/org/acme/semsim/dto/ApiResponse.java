@@ -31,10 +31,12 @@ public class ApiResponse {
 
 	// TODO: Make something better very soon...
 	// Should deliver a JSON with the following structure:
-	// - textDuplicateGroups: A a list of objects each having the follinwg properties based on TextDuplicatesGroup.
-	//   - sentences: A list of objects each having the following properties based on TextDuplicates.
-	//   - standardMeasure: The standardMeasure sentence for the group.
-//  // - a : The similarity score for the group.
+	// - textDuplicateGroups: A a list of objects each having the follinwg
+	// properties based on TextDuplicatesGroup.
+	// - sentences: A list of objects each having the following properties based on
+	// TextDuplicates.
+	// - standardMeasure: The standardMeasure sentence for the group.
+	// // - a : The similarity score for the group.
 	public ApiResponse(String message, String error, String sessionId, List<List<String>> similarityGroups) {
 		this.message = message;
 		this.error = error;
@@ -64,5 +66,13 @@ public class ApiResponse {
 
 	public void setSessionId(String sessionId) {
 		this.sessionId = sessionId;
+	}
+
+	public List<List<String>> getSimilarityGroups() {
+		return similarityGroups;
+	}
+
+	public void setSimilarityGroups(List<List<String>> similarityGroups) {
+		this.similarityGroups = similarityGroups;
 	}
 }
