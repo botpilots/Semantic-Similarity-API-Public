@@ -1,0 +1,723 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Large DITA sample with duplicates and more element nesting -->
+<topic id="ai_robot_maintenance_guide">
+	<title>Comprehensive AI Robot Hardware and Software Maintenance Guide</title>
+	<body>
+		<section id="gen_maint" importance="high">
+			<title>General Maintenance</title>
+			<p>
+                Regular maintenance of AI robot hardware ensures optimal performance and longevity.
+			</p>
+			<p>
+                Consistent upkeep of artificial intelligence machines guarantees peak efficiency and extended lifespan.
+			</p>
+			<p>
+                Performing scheduled service on robotic AI units maintains superior functionality and durability.
+			</p>
+			<p>
+                Routine checks and servicing are crucial for the sustained operation of AI robotic systems.
+			</p>
+		</section>
+
+		<section id="power_mgmt">
+			<title>Power Management</title>
+			<section id="power_down">
+				<title>Power Down Procedures</title>
+				<p>
+                    Always power down the unit completely before beginning any maintenance procedures.
+				</p>
+				<p>
+                    Ensure the robot is fully deactivated prior to initiating any service routines.
+				</p>
+				<p>
+                    Completely shut off all power to the system before starting maintenance tasks.
+				</p>
+				<p>
+                    Disconnect the main power supply and remove the battery backup to prevent accidental activation.
+				</p>
+				<p>
+                    Detach the primary power connection and extract the reserve battery to avoid unexpected startup.
+				</p>
+			</section>
+			<section id="power_connectors">
+				<title>Connector Inspection</title>
+				<p>
+                    Inspect all power connectors for signs of corrosion or damage quarterly.
+				</p>
+				<p>
+                    Examine power plugs and sockets every three months for wear, tear, or oxidation.
+				</p>
+				<p>
+                    Check the integrity of power connection points periodically to ensure reliable power delivery.
+				</p>
+			</section>
+		</section>
+
+		<section id="cleaning">
+			<title>Cleaning Procedures</title>
+			<section id="chassis_clean">
+				<title>External Chassis</title>
+				<p>
+                    Clean the external chassis with antistatic wipes designed for sensitive electronics.
+				</p>
+				<p>
+                    Wipe down the outer shell using specialty cloths that prevent static buildup.
+				</p>
+				<p>
+                    The robot's exterior should be cleaned using appropriate antistatic materials.
+				</p>
+				<p>
+                    Utilize non-abrasive, static-dissipative cleaners for the main body casing.
+				</p>
+			</section>
+			<section id="internal_clean">
+				<title>Internal Components</title>
+				<p>
+                    Use compressed air to remove dust from internal fans and heat sinks monthly.
+				</p>
+				<p>
+                    Clear internal ventilation pathways of debris using pressurized air every 30 days.
+				</p>
+				<p>
+                    Monthly dusting of interior cooling elements is required for thermal efficiency.
+				</p>
+			</section>
+		</section>
+
+		<section id="sensor_maint">
+			<title>Sensor Maintenance</title>
+			<section id="sensor_clean" props="frequency(monthly)">
+				<title>Cleaning</title>
+				<p>
+                    Sensor modules need to be cleaned every 30 days with pressurized air and soft fabric tools.
+				</p>
+				<p>
+                    Clean sensory components on a monthly basis utilizing air compression and delicate cloth applicators.
+				</p>
+				<p>
+                    The sensory array requires monthly cleaning using compressed air and microfiber cloths.
+				</p>
+			</section>
+			<section id="sensor_inspect" props="frequency(monthly)">
+				<title>Inspection</title>
+				<p>
+                    Optical sensors should be inspected for scratches or surface damage during cleaning.
+				</p>
+				<p>
+                    Examine lenses and sensor surfaces for imperfections or physical harm when cleaning.
+				</p>
+				<p>
+                    Visual checks for sensor integrity are crucial during the cleaning process.
+				</p>
+				<p>
+                    Replace damaged lens covers immediately to prevent sensor degradation.
+				</p>
+				<p>
+                    Substitute compromised protective lenses without delay to maintain sensor accuracy.
+				</p>
+			</section>
+			<section id="sensor_calib" props="frequency(post-cleaning)">
+				<title>Calibration</title>
+				<p>
+                    Calibrate all sensors after cleaning to ensure accurate environmental readings.
+				</p>
+				<p>
+                    Re-calibrate sensor suites post-cleaning for precise operational data collection.
+				</p>
+				<p>
+                    Post-maintenance sensor calibration is mandatory for reliable performance.
+				</p>
+			</section>
+		</section>
+
+		<section id="joint_maint" props="frequency(quarterly)">
+			<title>Joint Maintenance</title>
+			<section id="joint_inspect">
+				<title>Inspection</title>
+				<p>
+                    Articulation joints should be inspected quarterly for signs of wear or stress fractures.
+				</p>
+				<p>
+                    Check movement joints every three months for indications of deterioration or structural damage.
+				</p>
+				<p>
+                    Conduct examinations of all articulated connections four times yearly to detect fatigue or cracks.
+				</p>
+				<p>
+                    Industrial-grade robots require more frequent joint inspections due to higher operational stress.
+				</p>
+			</section>
+			<section id="joint_lube">
+				<title>Lubrication</title>
+				<p>
+                    Apply manufacturer-approved lubricant to joints according to the service schedule.
+				</p>
+				<p>
+                    Lubricate articulated points as specified in the maintenance manual using recommended grease.
+				</p>
+				<p>
+                    Ensure proper joint lubrication is maintained following the official service protocol.
+				</p>
+			</section>
+			<section id="joint_calib_med" props="applicable_model(medical)">
+				<title>Precision Calibration</title>
+				<p>
+                    Medical assistance robots need precision joint calibration after each maintenance cycle.
+				</p>
+				<p>
+                    Fine-tune joint movements for medical robots post-service for operational accuracy.
+				</p>
+				<p>
+                    Post-maintenance calibration of joints is critical for healthcare robotic applications.
+				</p>
+			</section>
+		</section>
+
+		<section id="cooling_maint" props="frequency(quarterly)">
+			<title>Cooling System Maintenance</title>
+			<section id="cooling_inspect">
+				<title>Inspection</title>
+				<p>
+                    The cooling system requires inspection every three months to prevent overheating.
+				</p>
+				<p>
+                    Thermal regulation mechanisms must be checked quarterly to maintain optimal temperature.
+				</p>
+				<p>
+                    Examine heat management systems on a three-month cycle to avoid thermal runaway conditions.
+				</p>
+			</section>
+			<section id="cooling_liquid" props="applicable_system(liquid-cooled)">
+				<title>Liquid Cooling Specifics</title>
+				<p>
+                    Advanced cooling systems may include liquid-based heat exchangers that require additional maintenance.
+				</p>
+				<p>
+                    Systems with liquid cooling need special attention during maintenance routines.
+				</p>
+				<p>
+                    Check coolant levels and quality in liquid-cooled systems every maintenance cycle.
+				</p>
+				<p>
+                    Verify the condition and quantity of coolant in liquid heat exchange systems regularly.
+				</p>
+			</section>
+			<section id="cooling_fans">
+				<title>Fan Checks</title>
+				<p>
+                    Ensure all cooling fans are operational and free from obstructions.
+				</p>
+				<p>
+                    Verify functionality and airflow of all thermal exhaust fans.
+				</p>
+				<p>
+                    Check fan bearings for noise or signs of impending failure.
+				</p>
+			</section>
+		</section>
+
+		<section id="battery_maint" importance="high" props="applicable_model(portable)">
+			<title>Battery Maintenance</title>
+			<section id="battery_importance">
+				<title>Importance</title>
+				<p>
+                    Battery maintenance is critical for portable AI units with limited power sources.
+				</p>
+				<p>
+                    Power cell upkeep is essential for mobile artificial intelligence systems that rely on internal energy.
+				</p>
+				<p>
+                    Maintaining energy storage components is vital for transportable robots without constant power connections.
+				</p>
+			</section>
+			<section id="battery_calib" props="frequency(250_cycles)">
+				<title>Calibration</title>
+				<p>
+                    The lithium-quantum cells should be calibrated every 250 charging cycles for optimal performance.
+				</p>
+				<p>
+                    Recalibrate advanced battery units after every 250 charge-discharge cycles to maximize efficiency.
+				</p>
+				<p>
+                    Perform battery calibration routines per the manufacturer's guidelines for cycle count.
+				</p>
+			</section>
+			<section id="battery_health">
+				<title>Health Monitoring</title>
+				<p>
+                    Monitor battery health using diagnostic tools to track capacity degradation over time.
+				</p>
+				<p>
+                    Utilize system diagnostics to observe the gradual decline in battery storage capability.
+				</p>
+				<p>
+                    Track battery performance metrics to anticipate replacement needs.
+				</p>
+			</section>
+		</section>
+
+		<section id="voice_module" props="frequency(as_needed)">
+			<title>Voice Module Calibration</title>
+			<section id="voice_accuracy">
+				<title>Accuracy Enhancement</title>
+				<p>
+                    Voice module calibration improves speech recognition accuracy in noisy environments.
+				</p>
+				<p>
+                    Adjust audio processing systems to enhance vocal pattern recognition in challenging acoustic settings.
+				</p>
+				<p>
+                    Fine-tuning the speech detection hardware improves command recognition in diverse soundscapes.
+				</p>
+			</section>
+			<section id="voice_multilang">
+				<title>Multilingual Support</title>
+				<p>
+                    Multilingual models require separate calibration for each language package installed.
+				</p>
+				<p>
+                    Calibrate individually for every language module activated on the system.
+				</p>
+				<p>
+                    Ensure distinct calibration profiles exist for all operational languages.
+				</p>
+			</section>
+			<section id="voice_custom_vocab">
+				<title>Custom Vocabulary</title>
+				<p>
+                    Custom vocabulary additions must be trained with multiple speakers for reliable recognition.
+				</p>
+				<p>
+                    Train specialized lexicons using diverse voice inputs to ensure robust performance.
+				</p>
+				<p>
+                    New vocabulary sets need comprehensive training across various user voices.
+				</p>
+			</section>
+		</section>
+
+		<section id="memory_core" props="frequency(annual) certification(required)">
+			<title>Memory Core Maintenance</title>
+			<section id="memory_personnel">
+				<title>Personnel Requirements</title>
+				<p>
+                    Memory core maintenance should be performed annually by certified technicians only.
+				</p>
+				<p>
+                    Neural storage systems require yearly service conducted by authorized maintenance personnel.
+				</p>
+				<p>
+                    Cognitive data banks need annual inspection by qualified service professionals with proper credentials.
+				</p>
+			</section>
+			<section id="memory_backup">
+				<title>Data Backup</title>
+				<p>
+                    The procedure involves backing up all user data and preference settings before servicing.
+				</p>
+				<p>
+                    This maintenance routine requires creating complete archives of user information and configurations.
+				</p>
+				<p>
+                    Ensure full backup of operational data and user profiles prior to memory core service.
+				</p>
+			</section>
+		</section>
+
+		<section id="software_updates" props="frequency(monthly)">
+			<title>Software Updates</title>
+			<section id="sw_patching">
+				<title>Patch Management</title>
+				<p>
+                    Regularly apply software patches to address security vulnerabilities and bugs.
+				</p>
+				<p>
+                    Install software updates promptly to fix known issues and enhance system security.
+				</p>
+				<p>
+                    Maintain an up-to-date system by applying patches released by the vendor.
+				</p>
+			</section>
+			<section id="sw_compatibility">
+				<title>Compatibility Checks</title>
+				<p>
+                    Verify compatibility of new software versions with existing hardware and configurations.
+				</p>
+				<p>
+                    Ensure software updates do not conflict with the current hardware setup before deployment.
+				</p>
+				<p>
+                    Check for hardware compatibility notes before applying major software revisions.
+				</p>
+			</section>
+			<section id="sw_rollback">
+				<title>Rollback Plan</title>
+				<p>
+                    Have a rollback plan in place in case software updates cause unforeseen issues.
+				</p>
+				<p>
+                    Prepare a procedure to revert to the previous stable software version if necessary.
+				</p>
+				<p>
+                    Maintain system restore points or backups to facilitate software rollback.
+				</p>
+			</section>
+		</section>
+
+		<section id="firmware_mgmt" props="frequency(biannual)">
+			<title>Firmware Management</title>
+			<section id="fw_updates">
+				<title>Firmware Updates</title>
+				<p>
+                    Update component firmware as recommended by the manufacturer for optimal hardware function.
+				</p>
+				<p>
+                    Apply firmware revisions provided by hardware vendors to improve performance and stability.
+				</p>
+				<p>
+                    Keep embedded firmware versions current according to manufacturer guidelines.
+				</p>
+			</section>
+			<section id="fw_update_proc">
+				<title>Update Procedure</title>
+				<p>
+                    Follow strict procedures during firmware updates to prevent bricking components.
+				</p>
+				<p>
+                    Adhere carefully to the specified update process to avoid rendering hardware unusable.
+				</p>
+				<p>
+                    Use reliable power sources and follow instructions precisely when flashing firmware.
+				</p>
+			</section>
+		</section>
+
+		<section id="actuator_checks" props="frequency(quarterly)">
+			<title>Actuator Checks</title>
+			<section id="actuator_function">
+				<title>Functional Testing</title>
+				<p>
+                    Test all actuators for smooth and accurate motion within their operational range.
+				</p>
+				<p>
+                    Verify that motors and servos perform movements correctly and without hesitation.
+				</p>
+				<p>
+                    Check actuator responsiveness and precision through diagnostic routines.
+				</p>
+			</section>
+			<section id="actuator_noise">
+				<title>Noise and Vibration</title>
+				<p>
+                    Listen for unusual noises or vibrations from actuators during operation.
+				</p>
+				<p>
+                    Monitor actuators for abnormal sounds or excessive shaking, indicating potential wear.
+				</p>
+				<p>
+                    Investigate any grinding, clicking, or irregular vibrations originating from movement systems.
+				</p>
+			</section>
+		</section>
+
+		<section id="network_conn" props="frequency(monthly)">
+			<title>Network Connectivity</title>
+			<section id="net_physical">
+				<title>Physical Connections</title>
+				<p>
+                    Inspect network cables and connectors for physical damage or loose connections.
+				</p>
+				<p>
+                    Check Ethernet ports and Wi-Fi antennas for integrity and proper seating.
+				</p>
+				<p>
+                    Examine all network interface hardware for signs of wear or connection issues.
+				</p>
+			</section>
+			<section id="net_performance">
+				<title>Performance Testing</title>
+				<p>
+                    Test network throughput and latency to ensure reliable communication.
+				</p>
+				<p>
+                    Verify data transfer speeds and response times meet operational requirements.
+				</p>
+				<p>
+                    Perform network diagnostics to confirm stable and efficient connectivity.
+				</p>
+			</section>
+			<section id="net_security">
+				<title>Security Settings</title>
+				<p>
+                    Review network security settings and update credentials periodically.
+				</p>
+				<p>
+                    Ensure wireless encryption and firewall rules are correctly configured and up-to-date.
+				</p>
+				<p>
+                    Verify network access controls and authentication mechanisms are secure.
+				</p>
+			</section>
+		</section>
+
+		<section id="env_sealing" props="frequency(annual)">
+			<title>Environmental Sealing</title>
+			<section id="seal_inspect">
+				<title>Seal Inspection</title>
+				<p>
+                    Inspect all environmental seals and gaskets for cracks, wear, or deterioration.
+				</p>
+				<p>
+                    Check protective barriers for damage that could compromise internal components.
+				</p>
+				<p>
+                    Examine seals around access panels and joints for signs of failure.
+				</p>
+			</section>
+			<section id="seal_replace">
+				<title>Seal Replacement</title>
+				<p>
+                    Replace any compromised seals immediately to maintain ingress protection ratings.
+				</p>
+				<p>
+                    Substitute damaged gaskets promptly to prevent dust and moisture intrusion.
+				</p>
+				<p>
+                    Ensure environmental sealing integrity by replacing worn components as needed.
+				</p>
+			</section>
+		</section>
+
+		<section id="safety_systems" importance="high" props="frequency(quarterly)">
+			<title>Safety System Tests</title>
+			<section id="estop_test">
+				<title>Emergency Stop Validation</title>
+				<p>
+                    Regularly test the functionality of all emergency stop buttons and circuits.
+				</p>
+				<p>
+                    Verify that activating emergency stops immediately halts all robot motion safely.
+				</p>
+				<p>
+                    Conduct functional checks of the E-stop system to ensure reliability in critical situations.
+				</p>
+			</section>
+			<section id="sensor_safety_test">
+				<title>Safety Sensor Checks</title>
+				<p>
+                    Test collision detection sensors and proximity warnings for correct operation.
+				</p>
+				<p>
+                    Verify that safety-critical sensors (e.g., LiDAR, force sensors) respond appropriately.
+				</p>
+				<p>
+                    Confirm the proper functioning of all sensors integrated into the safety system.
+				</p>
+			</section>
+			<section id="safety_logic_test">
+				<title>Safety Logic Verification</title>
+				<p>
+                    Verify the robot's safety logic and behavior in simulated hazardous conditions.
+				</p>
+				<p>
+                    Test programmed safety responses to ensure they function as designed.
+				</p>
+				<p>
+                    Confirm the integrity of the safety controller and its programmed logic.
+				</p>
+			</section>
+		</section>
+
+		<section id="data_backup" props="frequency(weekly)">
+			<title>Data Backup Protocols</title>
+			<section id="backup_schedule">
+				<title>Scheduled Backups</title>
+				<p>
+                    Ensure regular backups of critical operational data and configurations are performed.
+				</p>
+				<p>
+                    Maintain a consistent schedule for archiving important system data and settings.
+				</p>
+				<p>
+                    Perform routine backups according to the established data protection policy.
+				</p>
+			</section>
+			<section id="backup_verify">
+				<title>Backup Verification</title>
+				<p>
+                    Periodically test backup integrity by performing test restores.
+				</p>
+				<p>
+                    Verify that archived data can be successfully recovered when needed.
+				</p>
+				<p>
+                    Confirm the usability of backups through occasional restoration drills.
+				</p>
+			</section>
+			<section id="backup_storage">
+				<title>Storage Location</title>
+				<p>
+                    Store backups securely, preferably off-site or on a separate network segment.
+				</p>
+				<p>
+                    Ensure backup media is kept in a safe and environmentally controlled location.
+				</p>
+				<p>
+                    Follow best practices for secure and redundant backup storage.
+				</p>
+			</section>
+		</section>
+
+		<section id="thermal_calib" props="frequency(biannual)">
+			<title>Thermal Sensor Calibration</title>
+			<section id="thermal_accuracy">
+				<title>Accuracy Check</title>
+				<p>
+                    Calibrate thermal sensors to ensure accurate temperature readings for monitoring.
+				</p>
+				<p>
+                    Verify the precision of temperature sensors against known reference points.
+				</p>
+				<p>
+                    Adjust thermal sensor outputs for correct temperature reporting.
+				</p>
+			</section>
+			<section id="thermal_range">
+				<title>Range Validation</title>
+				<p>
+                    Confirm sensors report accurately across their entire specified temperature range.
+				</p>
+				<p>
+                    Test thermal sensor response at various temperature levels within operational limits.
+				</p>
+				<p>
+                    Validate the linearity and accuracy of thermal sensors over expected temperatures.
+				</p>
+			</section>
+		</section>
+
+		<section id="wiring_inspect" props="frequency(annual)">
+			<title>Wiring and Harness Inspection</title>
+			<section id="wiring_damage">
+				<title>Damage Check</title>
+				<p>
+                    Inspect all internal wiring and harnesses for signs of chafing, pinching, or wear.
+				</p>
+				<p>
+                    Examine electrical cables for insulation damage, abrasion, or stress points.
+				</p>
+				<p>
+                    Look for potential electrical hazards caused by damaged wiring insulation.
+				</p>
+			</section>
+			<section id="wiring_secure">
+				<title>Securing Connections</title>
+				<p>
+                    Ensure all connectors are securely fastened and strain reliefs are intact.
+				</p>
+				<p>
+                    Verify that cable management solutions properly secure and protect wiring.
+				</p>
+				<p>
+                    Check that all electrical connections are tight and well-supported.
+				</p>
+			</section>
+		</section>
+
+		<section id="mobility_sys" props="frequency(quarterly) applicable_model(mobile)">
+			<title>Mobility System Check (Wheels/Tracks)</title>
+			<section id="mobility_wear">
+				<title>Wear Inspection</title>
+				<p>
+                    Inspect wheels or tracks for excessive wear, damage, or debris buildup.
+				</p>
+				<p>
+                    Check the condition of the robot's locomotion system for physical deterioration.
+				</p>
+				<p>
+                    Examine drive components for signs of damage impacting movement.
+				</p>
+			</section>
+			<section id="mobility_align">
+				<title>Alignment</title>
+				<p>
+                    Verify wheel alignment or track tension according to manufacturer specifications.
+				</p>
+				<p>
+                    Ensure proper alignment and tensioning of the mobility system for efficient movement.
+				</p>
+				<p>
+                    Adjust wheel alignment or track settings as needed for optimal performance.
+				</p>
+			</section>
+		</section>
+
+		<section id="diagnostic_logs" props="frequency(weekly)">
+			<title>Review Diagnostic Logs</title>
+			<section id="log_errors">
+				<title>Error Identification</title>
+				<p>
+                    Regularly review system logs for error messages or warning codes.
+				</p>
+				<p>
+                    Analyze diagnostic outputs to identify potential or recurring issues.
+				</p>
+				<p>
+                    Monitor system logs for anomalies that might indicate underlying problems.
+				</p>
+			</section>
+			<section id="log_trends">
+				<title>Trend Analysis</title>
+				<p>
+                    Look for trends or patterns in log data that could predict future failures.
+				</p>
+				<p>
+                    Analyze historical log information to spot developing issues.
+				</p>
+				<p>
+                    Use log data for predictive maintenance insights.
+				</p>
+			</section>
+		</section>
+
+		<section id="doc_records" importance="normal">
+			<title>Documentation and Records</title>
+			<section id="doc_logging">
+				<title>Logging Procedures</title>
+				<p>
+                    Document all maintenance procedures in the service log with timestamp and technician ID.
+				</p>
+				<p>
+                    Record each maintenance action in the official service history with date and service provider credentials.
+				</p>
+				<p>
+                    Maintain comprehensive records of all service interventions including time and authorized personnel.
+				</p>
+			</section>
+			<section id="doc_sync">
+				<title>Database Synchronization</title>
+				<p>
+                    Digital service records should be synchronized with the manufacturer's maintenance database.
+				</p>
+				<p>
+                    Ensure electronic maintenance logs are uploaded to the central tracking system.
+				</p>
+				<p>
+                    Synchronize local service data with the master maintenance records repository.
+				</p>
+			</section>
+			<section id="doc_details">
+				<title>Detailed Observations</title>
+				<p>
+                    Include detailed observations of component condition in maintenance documentation.
+				</p>
+				<p>
+                    Note specific findings about hardware status during service activities.
+				</p>
+				<p>
+                    Record thorough notes on the state of components inspected or serviced.
+				</p>
+			</section>
+		</section>
+	</body>
+</topic>
