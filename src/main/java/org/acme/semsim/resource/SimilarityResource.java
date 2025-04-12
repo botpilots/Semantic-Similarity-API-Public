@@ -208,6 +208,11 @@ public class SimilarityResource {
 				message = "Processing completed but no similarity groups were created for this session.";
 			} else {
 				LOG.info("Returning " + similarityGroups.size() + " similarity groups for session: " + sessionId);
+				message = "Processing completed. Similarity groups are available.";
+			}
+
+			if (message != null) {
+				LOG.warn("The message was not null, but the status was OK. This should not happen.");
 			}
 
 			// Return the ok response with status and message and the similarityGroups
