@@ -96,7 +96,7 @@ public class SimilarityResource {
 		} catch (Exception e) {
 			LOG.error("error in createSimilarityGroups(): " + e.getMessage());
 			return Response.status(Response.Status.INTERNAL_SERVER_ERROR)
-					.entity(new ApiResponse("Internal server error.", e.getMessage(), null))
+					.entity(new ApiResponse(null, "Internal Server Error: " + e.getClass().getSimpleName() + ": " + e.getMessage(), null))
 					.build();
 		}
 	}
