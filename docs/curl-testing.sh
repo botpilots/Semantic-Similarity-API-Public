@@ -36,7 +36,7 @@ section() {
 # Function to run a curl command and display the command and its output
 run_curl() {
 	echo "$ $1"
-	eval "$1"
+	eval "$1 | jq ."
 	echo ""
 }
 
@@ -58,55 +58,55 @@ echo "Cookie file: $COOKIE_FILE"
 section "Trigger Accepted GET Response Test"
 
 # 1. Submit an XML document for processing
-run_curl "curl -X POST -H \"Content-Type: application/xml\" --data-binary @samples/sample_xs.xml ${BASE_URL}/api/similarity?elements=paragraph -c ${COOKIE_FILE}"
+run_curl "curl -s -X POST -H \"Content-Type: application/xml\" --data-binary @samples/sample_xs.xml ${BASE_URL}/api/similarity?elements=paragraph -c ${COOKIE_FILE}"
 
 # 2. Retrieve similarity results
-run_curl "curl -X GET -b ${COOKIE_FILE} ${BASE_URL}/api/similarity/results"
+run_curl "curl -s -X GET -b ${COOKIE_FILE} ${BASE_URL}/api/similarity/results"
 
 section "Trigger No Embeddings Generated Test"
 
 # 1. Submit an XML document for processing
-run_curl "curl -X POST -H \"Content-Type: application/xml\" --data-binary @samples/sample_xs.xml ${BASE_URL}/api/similarity?elements=p -c ${COOKIE_FILE}"
+run_curl "curl -s -X POST -H \"Content-Type: application/xml\" --data-binary @samples/sample_xs.xml ${BASE_URL}/api/similarity?elements=p -c ${COOKIE_FILE}"
 sleep 1
 # 2. Retrieve similarity results
-run_curl "curl -X GET -b ${COOKIE_FILE} ${BASE_URL}/api/similarity/results"
+run_curl "curl -s -X GET -b ${COOKIE_FILE} ${BASE_URL}/api/similarity/results"
 
 section "Sample File Tests"
 
 # Extra Small Sample (XML) - part of small suite
 if should_run "small"; then
 	echo "Running: Extra Small Sample (XML)"
-	run_curl "curl -X POST -H \"Content-Type: application/xml\" --data-binary @samples/sample_xs.xml ${BASE_URL}/api/similarity -c ${COOKIE_FILE}"
+	run_curl "curl -s -X POST -H \"Content-Type: application/xml\" --data-binary @samples/sample_xs.xml ${BASE_URL}/api/similarity -c ${COOKIE_FILE}"
 	echo "Waiting 1 second for processing..."
 	sleep 1
-	run_curl "curl -X GET -b ${COOKIE_FILE} ${BASE_URL}/api/similarity/results"
+	run_curl "curl -s -X GET -b ${COOKIE_FILE} ${BASE_URL}/api/similarity/results"
 fi
 
 # Small Sample (DITA) - part of small suite
 if should_run "small"; then
 	echo "Running: Small Sample (DITA)"
-	run_curl "curl -X POST -H \"Content-Type: application/xml\" --data-binary @samples/sample_s.dita ${BASE_URL}/api/similarity/ -c ${COOKIE_FILE}"
+	run_curl "curl -s -X POST -H \"Content-Type: application/xml\" --data-binary @samples/sample_s.dita ${BASE_URL}/api/similarity/ -c ${COOKIE_FILE}"
 	echo "Waiting 2 seconds for processing..."
 	sleep 2
-	run_curl "curl -X GET -b ${COOKIE_FILE} ${BASE_URL}/api/similarity/results"
+	run_curl "curl -s -X GET -b ${COOKIE_FILE} ${BASE_URL}/api/similarity/results"
 fi
 
 # Medium Sample (DITA) - part of large suite only
 if should_run "large"; then
 	echo "Running: Medium Sample (DITA)"
-	run_curl "curl -X POST -H \"Content-Type: application/xml\" --data-binary @samples/sample_m.dita ${BASE_URL}/api/similarity -c ${COOKIE_FILE}"
-	echo "Waiting 2 seconds for processing..."
-	sleep 2
-	run_curl "curl -X GET -b ${COOKIE_FILE} ${BASE_URL}/api/similarity/results"
+	run_curl "curl -s -X POST -H \"Content-Type: application/xml\" --data-binary @samples/sample_m.dita ${BASE_URL}/api/similarity -c ${COOKIE_FILE}"
+	echo "Waiting 3 seconds for processing..."
+	sleep 3
+	run_curl "curl -s -X GET -b ${COOKIE_FILE} ${BASE_URL}/api/similarity/results"
 fi
 
 # Large Sample (DITA) - part of large suite only
 if should_run "large"; then
 	echo "Running: Large Sample (DITA)"
-	run_curl "curl -X POST -H \"Content-Type: application/xml\" --data-binary @samples/sample_l.dita ${BASE_URL}/api/similarity -c ${COOKIE_FILE}"
-	echo "Waiting 3 seconds for processing..."
-	sleep 3
-	run_curl "curl -X GET -b ${COOKIE_FILE} ${BASE_URL}/api/similarity/results"
+	run_curl "curl -s -X POST -H \"Content-Type: application/xml\" --data-binary @samples/sample_l.dita ${BASE_URL}/api/similarity -c ${COOKIE_FILE}"
+	echo "Waiting 4 seconds for processing..."
+	sleep 4
+	run_curl "curl -s -X GET -b ${COOKIE_FILE} ${BASE_URL}/api/similarity/results"
 fi
 
 section "XPath Tests"
@@ -114,37 +114,37 @@ section "XPath Tests"
 # Process XML with XPath - Extra Small Sample - part of small suite
 if should_run "small"; then
 	echo "Running: XPath with Extra Small Sample"
-	run_curl "curl -X POST -H \"Content-Type: application/xml\" --data-binary @samples/sample_xs.xml '${BASE_URL}/api/similarity?elements=paragraph' -c ${COOKIE_FILE}"
+	run_curl "curl -s -X POST -H \"Content-Type: application/xml\" --data-binary @samples/sample_xs.xml '${BASE_URL}/api/similarity?elements=paragraph' -c ${COOKIE_FILE}"
 	echo "Waiting 1 second for processing..."
 	sleep 1
-	run_curl "curl -X GET -b ${COOKIE_FILE} ${BASE_URL}/api/similarity/results"
+	run_curl "curl -s -X GET -b ${COOKIE_FILE} ${BASE_URL}/api/similarity/results"
 fi
 
 # Process XML with XPath - Small Sample (DITA) - part of small suite
 if should_run "small"; then
 	echo "Running: XPath with Small Sample"
-	run_curl "curl -X POST -H \"Content-Type: application/xml\" --data-binary @samples/sample_s.dita '${BASE_URL}/api/similarity?elements=p' -c ${COOKIE_FILE}"
+	run_curl "curl -s -X POST -H \"Content-Type: application/xml\" --data-binary @samples/sample_s.dita '${BASE_URL}/api/similarity?elements=p' -c ${COOKIE_FILE}"
 	echo "Waiting 2 seconds for processing..."
 	sleep 2
-	run_curl "curl -X GET -b ${COOKIE_FILE} ${BASE_URL}/api/similarity/results"
+	run_curl "curl -s -X GET -b ${COOKIE_FILE} ${BASE_URL}/api/similarity/results"
 fi
 
 # Process XML with XPath - Medium Sample (DITA) - part of large suite only
 if should_run "large"; then
 	echo "Running: XPath with Medium Sample"
-	run_curl "curl -X POST -H \"Content-Type: application/xml\" --data-binary @samples/sample_m.dita '${BASE_URL}/api/similarity?elements=title' -c ${COOKIE_FILE}"
-	echo "Waiting 1 second for processing..."
-	sleep 1
-	run_curl "curl -X GET -b ${COOKIE_FILE} ${BASE_URL}/api/similarity/results"
+	run_curl "curl -s -X POST -H \"Content-Type: application/xml\" --data-binary @samples/sample_m.dita '${BASE_URL}/api/similarity?elements=title' -c ${COOKIE_FILE}"
+	echo "Waiting 3 second for processing..."
+	sleep 3
+	run_curl "curl -s -X GET -b ${COOKIE_FILE} ${BASE_URL}/api/similarity/results"
 fi
 
 # Process XML with XPath - Large Sample (DITA) - part of large suite only
 if should_run "large"; then
 	echo "Running: XPath with Large Sample"
-	run_curl "curl -X POST -H \"Content-Type: application/xml\" --data-binary @samples/sample_l.dita '${BASE_URL}/api/similarity?elements=p' -c ${COOKIE_FILE}"
-	echo "Waiting 1 second for processing..."
-	sleep 1
-	run_curl "curl -X GET -b ${COOKIE_FILE} ${BASE_URL}/api/similarity/results"
+	run_curl "curl -s -X POST -H \"Content-Type: application/xml\" --data-binary @samples/sample_l.dita '${BASE_URL}/api/similarity?elements=p' -c ${COOKIE_FILE}"
+	echo "Waiting 4 second for processing..."
+	sleep 4
+	run_curl "curl -s -X GET -b ${COOKIE_FILE} ${BASE_URL}/api/similarity/results"
 fi
 
 section "Advanced XPath Examples"
@@ -153,52 +153,43 @@ section "Advanced XPath Examples"
 if should_run "small"; then
 	# Select all paragraph elements
 	echo "Running: XPath - Select all paragraphs"
-	run_curl "curl -X POST -H \"Content-Type: application/xml\" --data-binary @samples/sample_xs.xml '${BASE_URL}/api/similarity?elements=paragraph' -c ${COOKIE_FILE}"
+	run_curl "curl -s -X POST -H \"Content-Type: application/xml\" --data-binary @samples/sample_xs.xml '${BASE_URL}/api/similarity?elements=paragraph' -c ${COOKIE_FILE}"
 	echo "Waiting 1 second for processing..."
 	sleep 1
-	run_curl "curl -X GET -b ${COOKIE_FILE} ${BASE_URL}/api/similarity/results"
+	run_curl "curl -s -X GET -b ${COOKIE_FILE} ${BASE_URL}/api/similarity/results"
 fi
 
 if should_run "large"; then
 	# Select only the first paragraph element (using URL encoding to avoid issues with square brackets)
 	echo "Running: XPath - Select first paragraph"
-	run_curl "curl -X POST -H \"Content-Type: application/xml\" --data-binary @samples/sample_xs.xml '${BASE_URL}/api/similarity?elements=paragraph' -c ${COOKIE_FILE}"
+	run_curl "curl -s -X POST -H \"Content-Type: application/xml\" --data-binary @samples/sample_xs.xml '${BASE_URL}/api/similarity?elements=paragraph' -c ${COOKIE_FILE}"
 	echo "Waiting 1 second for processing..."
 	sleep 1
-	run_curl "curl -X GET -b ${COOKIE_FILE} ${BASE_URL}/api/similarity/results"
+	run_curl "curl -s -X GET -b ${COOKIE_FILE} ${BASE_URL}/api/similarity/results"
 fi
 
-section "Creating validatation error for elements parameter"
+section "Creating validation error for elements parameter"
 
 if should_run "small"; then
 	# URL-encoded example for //paragraph[contains(text(),'example')]
 	echo "Running: URL-encoded XPath - Text content search"
-	run_curl "curl -X POST -H \"Content-Type: application/xml\" --data-binary @samples/sample_xs.xml '${BASE_URL}/api/similarity?elements=%2F%2Fparagraph' -c ${COOKIE_FILE}"
+	run_curl "curl -s -X POST -H \"Content-Type: application/xml\" --data-binary @samples/sample_xs.xml '${BASE_URL}/api/similarity?elements=%2F%2Fparagraph' -c ${COOKIE_FILE}"
 	echo "Waiting 1 second for processing..."
 	sleep 1
-	run_curl "curl -X GET -b ${COOKIE_FILE} ${BASE_URL}/api/similarity/results"
+	run_curl "curl -s -X GET -b ${COOKIE_FILE} ${BASE_URL}/api/similarity/results"
 fi
 
 if should_run "large"; then
 	# URL-encoded example for //paragraph[string-length() > 100]
 	echo "Running: URL-encoded XPath - String length function"
-	run_curl "curl -X POST -H \"Content-Type: application/xml\" --data-binary @samples/sample_xs.xml '${BASE_URL}/api/similarity?elements=%2F%2Fparagraph%5Bstring-length%28%29%20%3E%20100%5D' -c ${COOKIE_FILE}"
+	run_curl "curl -s -X POST -H \"Content-Type: application/xml\" --data-binary @samples/sample_xs.xml '${BASE_URL}/api/similarity?elements=%2F%2Fparagraph%5Bstring-length%28%29%20%3E%20100%5D' -c ${COOKIE_FILE}"
 	echo "Waiting 1 second for processing..."
 	sleep 1
-	run_curl "curl -X GET -b ${COOKIE_FILE} ${BASE_URL}/api/similarity/results"
+	run_curl "curl -s -X GET -b ${COOKIE_FILE} ${BASE_URL}/api/similarity/results"
 fi
 
-section "Troubleshooting"
-
-# Display cookie file contents
-run_curl "cat ${COOKIE_FILE}"
-
-# Calculate and display total execution time
 if [ "$TEST_SUITE" = "small" ]; then
 	echo "Small test suite completed."
 else
 	echo "Large test suite completed."
 fi
-
-echo ""
-echo "All tests completed!"
