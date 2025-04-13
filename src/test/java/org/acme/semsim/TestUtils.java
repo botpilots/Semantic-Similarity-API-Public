@@ -2,8 +2,11 @@ package org.acme.semsim;
 
 import static io.restassured.RestAssured.given;
 
+import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+
+import org.acme.semsim.dto.ApiResponse;
 
 import io.quarkus.logging.Log;
 import io.restassured.response.Response;
@@ -14,7 +17,7 @@ public class TestUtils {
 	 * 
 	 * Polls the results endpoint until it returns a 200 status code or times out.
 	 * 
-	 * @param sessionId      The session ID to use for the request
+	 * @param sessionId The session ID to use for the request
 	 * @return The response from the results endpoint
 	 * @throws InterruptedException If the thread is interrupted while sleeping
 	 */
@@ -51,19 +54,22 @@ public class TestUtils {
 	}
 
 	/**
-	 * Gets the number of paragraphs in the JSON response body, using regex to find
-	 * the number of paragraphs in the response, based on their quotation marks "".
+	 * Gets the number of paragraphs in the JSON response body by counting the
+	 * number of strings in the similarityGroups array.
 	 * 
 	 * @param response The response to get the paragraph count from
 	 * @return The number of paragraphs in the response
 	 */
-	// TODO: Update when response body updates with more properties.
+	// NOTE: Will break test if similarityGroups data structure changes.
 	public static int getParagraphCount(Response response) {
-		Pattern paragraphPattern = Pattern.compile("\"(.*?)\"");
-		Matcher matcher = paragraphPattern.matcher(response.getBody().asString());
+		ApiResponse apiResponse = response.getBody().as(ApiResponse.class);
+		List<List<String>> similarityGroups = apiResponse.getSimilarityGroups();
+		if (similarityGroups == null) {
+			return 0;
+		}
 		int paragraphCount = 0;
-		while (matcher.find()) {
-			paragraphCount++;
+		for (List<String> group : similarityGroups) {
+			paragraphCount += group.size();
 		}
 		return paragraphCount;
 	}

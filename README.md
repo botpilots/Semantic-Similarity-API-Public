@@ -34,7 +34,7 @@ The application will be available at http://localhost:8080
 For detailed information about the API, please refer to the documentation in the `docs` folder:
 
 - [API Specification](docs/api-specification.md) 
-- [Curl Testing Guide](docs/curl-testing.md)
+- [Curl Testing Guide](src/test/curl-testing.md)
 
 ## License
 
