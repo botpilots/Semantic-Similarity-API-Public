@@ -2,9 +2,12 @@ package org.acme.semsim.dto;
 
 import java.util.List;
 
+import io.quarkus.runtime.annotations.RegisterForReflection;
+
 /**
  * Generic API response object.
  */
+@RegisterForReflection
 public class ApiResponse {
 	private String message;
 	private String error;

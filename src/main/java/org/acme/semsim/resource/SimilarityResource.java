@@ -36,12 +36,17 @@ public class SimilarityResource {
 	 * @param elements      A space-separated string of element names to extract text
 	 *                   from (e.g., "p li div")
 	 *                   (default: "p")
+	 * @param threshold  Optional similarity threshold value between 0.0 and 1.0
+	 *                   (default: defined in configuration)
 	 * @return Response with a session cookie
 	 */
 	@POST
 	@Consumes(MediaType.APPLICATION_XML)
 	@Produces(MediaType.APPLICATION_JSON)
-	public Response apiSimilarity(String xmlContent, @QueryParam("elements") @DefaultValue("p") String elements) {
+	public Response apiSimilarity(
+			String xmlContent, 
+			@QueryParam("elements") @DefaultValue("p") String elements,
+			@QueryParam("threshold") Double threshold) {
 		// We assume parameter elements is encoded, so we decode it
 		try {
 			elements = java.net.URLDecoder.decode(elements, StandardCharsets.UTF_8);
@@ -59,6 +64,15 @@ public class SimilarityResource {
 					.entity(new ApiResponse("Elements parameter validation failed.", "Elements parameter should be a space separated string of valid XML elements." , null))
 					.build();
 		}
+		
+		// Validate threshold if provided
+		if (threshold != null && (threshold < 0.0 || threshold > 1.0)) {
+			LOG.error("Validation error for threshold parameter: " + threshold);
+			return Response.status(Response.Status.BAD_REQUEST)
+					.entity(new ApiResponse("Threshold parameter validation failed.", "Threshold must be between 0.0 and 1.0." , null))
+					.build();
+		}
+		
 		// We check if xmlContent is null or empty
 		if (xmlContent == null) {
 			LOG.warn("Received no xmlContent in request body");
@@ -73,17 +87,17 @@ public class SimilarityResource {
 					.entity(new ApiResponse("Error processing request.", "XML content is empty or invalid", null))
 					.build();
 		}
-		return createSimilarityGroups(xmlContent, elements);
+		return createSimilarityGroups(xmlContent, elements, threshold);
     }
 
 	/**
 	 * Internal method to process XML with optional element names.
 	 * xmlContent and elementNames are assumed to be validated beforehand.
 	 */
-	private Response createSimilarityGroups(String xmlContent, String elementNames) {
+	private Response createSimilarityGroups(String xmlContent, String elementNames, Double threshold) {
 		try {
 			// Then start async xml processing and get a session ID
-			NewCookie sessionCookie = similarityProcessingService.startAsyncProcessing(xmlContent, elementNames);
+			NewCookie sessionCookie = similarityProcessingService.startAsyncProcessing(xmlContent, elementNames, threshold);
 
 			// Return 202 Accepted with session ID in both cookie and body
 			return Response.status(Response.Status.ACCEPTED)
@@ -94,11 +108,30 @@ public class SimilarityResource {
 					.build();
 
 		} catch (Exception e) {
-			LOG.error("error in createSimilarityGroups(): " + e.getMessage());
+			// Include the full stack trace and exception details in the log
+			StringBuilder errorDetails = new StringBuilder();
+			errorDetails.append("Exception in createSimilarityGroups(): ").append(e.getClass().getName()).append("\n");
+			errorDetails.append("Message: ").append(e.getMessage()).append("\n");
+			errorDetails.append("Stack trace:\n");
+			for (StackTraceElement element : e.getStackTrace()) {
+				errorDetails.append("  at ").append(element.toString()).append("\n");
+			}
+			if (e.getCause() != null) {
+				errorDetails.append("Caused by: ").append(e.getCause().getClass().getName()).append("\n");
+				errorDetails.append("Cause message: ").append(e.getCause().getMessage()).append("\n");
+			}
+			LOG.error(errorDetails.toString());
 			return Response.status(Response.Status.INTERNAL_SERVER_ERROR)
 					.entity(new ApiResponse(null, "Internal Server Error: " + e.getClass().getSimpleName() + ": " + e.getMessage(), null))
 					.build();
 		}
+	}
+
+	/**
+	 * Backward compatibility method
+	 */
+	private Response createSimilarityGroups(String xmlContent, String elementNames) {
+		return createSimilarityGroups(xmlContent, elementNames, null);
 	}
 
 	/**

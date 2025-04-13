@@ -22,7 +22,7 @@ public class GroupingService {
 	@Inject
 	EmbeddingService embeddingService;
 
-	@ConfigProperty(name = "semsim.similarity.threshold", defaultValue = "0.75")
+	@ConfigProperty(name = "semsim.similarity.defaultThreshold")
 	double similarityThreshold;
 
 	/**
@@ -33,7 +33,18 @@ public class GroupingService {
 	 */
 	// TODO: Should return a ArrayList holding the custom Text objects.
 	public List<List<String>> group(List<Sentence> sentences) {
-		LOG.debug("Grouping " + sentences.size() + " sentences with similarity threshold " + similarityThreshold);
+		return group(sentences, similarityThreshold);
+	}
+
+	/**
+	 * Group similar sentences based on cosine similarity using a custom threshold.
+	 * 
+	 * @param sentences List of sentences with their vector embeddings
+	 * @param threshold Custom similarity threshold to use (between 0.0 and 1.0)
+	 * @return List of lists of similar sentences (groups)
+	 */
+	public List<List<String>> group(List<Sentence> sentences, double threshold) {
+		LOG.debug("Grouping " + sentences.size() + " sentences with similarity threshold " + threshold);
 
 		List<List<String>> groups = new ArrayList<>();
 		Set<Integer> processedIndices = new HashSet<>();
@@ -63,7 +74,7 @@ public class GroupingService {
 				double similarity = embeddingService.calculateCosineSimilarity(
 						currentSentence.getVector(), candidateSentence.getVector());
 
-				if (similarity >= similarityThreshold) {
+				if (similarity >= threshold) {
 					similarSentences.add(candidateSentence.getText());
 					processedIndices.add(j);
 					LOG.debug("Found similar sentences with similarity " + similarity + ": " +
