@@ -203,16 +203,20 @@ public class SimilarityResource {
 				LOG.warn("Unexpected error! Similarity groups was null for " + sessionId);;
 			}
 
-			if (similarityGroups == null || similarityGroups.isEmpty()) {
+
+			if (message != null) {
+				LOG.warn("The message was not null, but the status was OK. This should not happen.");
+				LOG.warn("Message (that should have been null): " + message);
+				error = "The message was not null, but the status was OK. This should not happen.";
+				return Response.status(Response.Status.INTERNAL_SERVER_ERROR)
+						.entity(new ApiResponse(message, error, sessionId))
+						.build();
+			} else if (similarityGroups == null || similarityGroups.isEmpty()) {
 				LOG.info("Processing completed but no similarity groups were created for this session: " + sessionId);
 				message = "Processing completed but no similarity groups were created for this session.";
 			} else {
 				LOG.info("Returning " + similarityGroups.size() + " similarity groups for session: " + sessionId);
 				message = "Processing completed. Similarity groups are available.";
-			}
-
-			if (message != null) {
-				LOG.warn("The message was not null, but the status was OK. This should not happen.");
 			}
 
 			// Return the ok response with status and message and the similarityGroups
