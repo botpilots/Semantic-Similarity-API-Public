@@ -38,4 +38,4 @@ For detailed information about the API, please refer to the documentation in the
 
 ## License
 
-This code is proprietary to BotPilots AB and must not be used outside of the company nor distributed in any way without permission.
+MIT License.
