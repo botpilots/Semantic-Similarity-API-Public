@@ -26,9 +26,9 @@ The Semantic Similarity API provides a powerful solution for analyzing text simi
 ./mvnw compile quarkus:dev
 ```
 
-The application will be available at http://localhost:8080
+The application will be available at http://localhost:8080.
 
-To test and demo the APIs capabilities, run this script: [Curl Testing Guide](src/test/curl-testing.md).
+To test and demo the APIs capabilities, run script curl-testing.sh or see: [Curl Testing Guide](src/test/curl-testing.md).
 
 ## Documentation
 
