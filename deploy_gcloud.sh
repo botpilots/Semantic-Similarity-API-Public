@@ -7,7 +7,7 @@ set -e
 # TODO: Fill in these values before running the script.
 
 # Google Cloud Project ID
-GCP_PROJECT_ID="semsim-456712"
+GCP_PROJECT_ID="semsim-458515"
 
 # Artifact Registry Configuration
 # Choose a region for your Artifact Registry (e.g., us-central1, europe-west1)
@@ -25,7 +25,7 @@ ALLOW_UNAUTHENTICATED=true
 
 # Local Docker Image Configuration
 # The name and tag of the local Docker image you built
-LOCAL_IMAGE_NAME="quarkus/semsim-arm64:latest"
+LOCAL_IMAGE_NAME="quarkus/semsim-amd64:latest"
 
 # === Prerequisites Check (Informational) ===
 echo "INFO: Ensure you have:"
@@ -74,7 +74,6 @@ DEPLOY_ARGS=(
     "${CLOUD_RUN_SERVICE_NAME}"  # Identifies the service to create/update
     --image="${REMOTE_IMAGE_NAME}" # Specifies the container image for the new revision (updated every time)
     --region="${CLOUD_RUN_REGION}"   # Must match existing service region if updating
-    --cpu-architecture=arm64  # Specifies the required CPU architecture (set on create/update)
     --platform=managed        # Specifies the Cloud Run platform (set on create)
     --project="${GCP_PROJECT_ID}" # Specifies the GCP project
 )
