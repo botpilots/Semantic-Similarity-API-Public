@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Semantic Similarity Demo</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <header class="header">
+        <div class="product-name">Semantic Similarity API Demo</div>
+    </header>
+
+    <main class="main-content">
+        <div class="left-panel">
+            <h2>Upload XML</h2>
+            <div class="sample-buttons">
+                 <button id="load-small">Small</button>
+                 <button id="load-medium">Medium</button>
+                 <button id="load-large">Large</button>
+            </div>
+            <div id="xml-input-viewer" class="xml-input-viewer">
+                <!-- XML content will be loaded here -->
+                <!-- Log entries might be prepended/appended here if needed -->
+            </div>
+
+			<div class="input-group">
+                <label for="element-names">Element Names (space-separated):</label>
+                <input type="text" id="element-names" name="element-names" value="p li item">
+            </div>
+			
+            <div class="input-group">
+                <label for="similarity-threshold">Similarity Threshold: <span id="threshold-value">0.7</span></label>
+                <input type="range" id="similarity-threshold" name="similarity-threshold" value="0.7" min="0.0" max="1.0" step="0.05">
+            </div>
+			
+			<div id="post-info-box" class="info-box"></div>
+			<button id="post-request">POST</button>
+        </div>
+        <div class="latest-group-panel">
+            <h2>Get groups</h2>
+            <div id="group-visualization" class="group-visualization">
+                <!-- Group columns will be rendered here -->
+            </div>
+			<div id="get-info-box" class="info-box"></div>
+            <button id="get-results">GET</button>
+        </div>
+    </main>
+
+    <footer class="footer">
+        <div class="company-name">Developed by <a href="https://botpilots.se">BotPilots AB</a></div>
+    </footer>
+
+    <script src="script.js"></script>
+</body>
+</html> 

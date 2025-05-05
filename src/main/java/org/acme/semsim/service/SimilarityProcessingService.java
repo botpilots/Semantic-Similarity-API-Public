@@ -55,11 +55,13 @@ public class SimilarityProcessingService {
 	 * @param xmlContent   XML document content to process
 	 * @param elementNames Space-separated string of element names to extract text
 	 *                     from (null for default)
+	 * @param threshold    Optional similarity threshold (null for default)
 	 * @return SessionCookie with sessionId to retrieve results later
 	 */
 	// TODO: Overload method that accepts a session cookie, so several XML documents can be processed in same session.
-	public NewCookie startAsyncProcessing(String xmlContent, String elementNames) throws XPathExpressionException, ParserConfigurationException, IOException, SAXException {
-		LOG.info("Creating groups for XML document with element names: " + elementNames);
+	public NewCookie startAsyncProcessing(String xmlContent, String elementNames, Double threshold) throws XPathExpressionException, ParserConfigurationException, IOException, SAXException {
+		LOG.info("Creating groups for XML document with element names: " + elementNames + 
+				(threshold != null ? " and threshold: " + threshold : ""));
 
 		// First create a working copy of the XML document with added attributes
 		Document document = createWorkingCopy(xmlContent, elementNames);
@@ -67,10 +69,11 @@ public class SimilarityProcessingService {
 		// Create a new session
 		String sessionId = sessionService.createSession();
 		LOG.info("Starting XML async processing for session: " + sessionId +
-				(elementNames != null ? " with element names: " + elementNames : ""));
+				(elementNames != null ? " with element names: " + elementNames : "") +
+				(threshold != null ? " and threshold: " + threshold : ""));
 
 		// Start async processing
-		CompletableFuture.runAsync(() -> processXmlContent(sessionId, document, elementNames), processingExecutor)
+		CompletableFuture.runAsync(() -> processXmlContent(sessionId, document, elementNames, threshold), processingExecutor)
 				// TODO: Rename to "unknown error in method processXmlContent()" and add more
 				// specific handling inside method.
 				.exceptionally(ex -> {
@@ -87,11 +90,18 @@ public class SimilarityProcessingService {
 	}
 
 	/**
+	 * Backward compatibility method
+	 */
+	public NewCookie startAsyncProcessing(String xmlContent, String elementNames) throws XPathExpressionException, ParserConfigurationException, IOException, SAXException {
+		return startAsyncProcessing(xmlContent, elementNames, null);
+	}
+
+	/**
 	 * Process XML content with specific element names and store results in the
 	 * session.
 	 *
 	 */
-	private void processXmlContent(String sessionId, Document document, String elementNames) {
+	private void processXmlContent(String sessionId, Document document, String elementNames, Double threshold) {
 
 		// Get session data, session is already in PROCESSING state by default
 		SessionData sessionData = sessionService.getSession(sessionId);
@@ -105,7 +115,8 @@ public class SimilarityProcessingService {
 			List<List<String>> similarityGroups;
 
 			LOG.debug("Processing XML for session: " + sessionId +
-					(elementNames != null ? " with element names: " + elementNames : ""));
+					(elementNames != null ? " with element names: " + elementNames : "") +
+					(threshold != null ? " and threshold: " + threshold : ""));
 
 
 			// 1. Extract text elements from XML
@@ -127,7 +138,11 @@ public class SimilarityProcessingService {
 
 			// 3. Group and store similarity groups in session
 			// TODO: Create a class for the similarity groups with metadata about the group such as its similarity score, etc.
-			similarityGroups = groupingService.group(textContentWithEmbeddings);
+			if (threshold != null) {
+				similarityGroups = groupingService.group(textContentWithEmbeddings, threshold);
+			} else {
+				similarityGroups = groupingService.group(textContentWithEmbeddings);
+			}
 			LOG.info("Found " + similarityGroups.size() + " similarity groups for session " + sessionId);
 			similarityGroups.forEach(sessionData::addSimilarityGroup);
 
@@ -139,6 +154,13 @@ public class SimilarityProcessingService {
 			LOG.error("processXmlContent() failed: " + e.getMessage());
 			sessionData.setProcessingStatus(SessionData.ProcessingStatus.ERROR);
 		}
+	}
+
+	/**
+	 * Backward compatibility method
+	 */
+	private void processXmlContent(String sessionId, Document document, String elementNames) {
+		processXmlContent(sessionId, document, elementNames, null);
 	}
 
 }
