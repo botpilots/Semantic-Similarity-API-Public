@@ -5,28 +5,28 @@ import java.util.List;
 import io.quarkus.runtime.annotations.RegisterForReflection;
 
 /**
- * Generic API response object.
+ * API response object for grouping results.
  */
 @RegisterForReflection
-public class ApiResponse {
+public class GroupingApiResponse {
 	private String message;
 	private String error;
 	private String sessionId;
 	private List<List<String>> similarityGroups;
 
-	public ApiResponse() {
+	public GroupingApiResponse() {
 	}
 
-	public ApiResponse(String message) {
+	public GroupingApiResponse(String message) {
 		this.message = message;
 	}
 
-	public ApiResponse(String message, String sessionId) {
+	public GroupingApiResponse(String message, String sessionId) {
 		this.message = message;
 		this.sessionId = sessionId;
 	}
 
-	public ApiResponse(String message, String error, String sessionId) {
+	public GroupingApiResponse(String message, String error, String sessionId) {
 		this.message = message;
 		this.error = error;
 		this.sessionId = sessionId;
@@ -40,7 +40,7 @@ public class ApiResponse {
 	// TextDuplicates.
 	// - standardMeasure: The standardMeasure sentence for the group.
 	// // - a : The similarity score for the group.
-	public ApiResponse(String message, String error, String sessionId, List<List<String>> similarityGroups) {
+	public GroupingApiResponse(String message, String error, String sessionId, List<List<String>> similarityGroups) {
 		this.message = message;
 		this.error = error;
 		this.sessionId = sessionId;

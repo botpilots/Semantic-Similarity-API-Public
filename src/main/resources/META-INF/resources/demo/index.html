@@ -45,6 +45,27 @@
 			<div id="get-info-box" class="info-box"></div>
             <button id="get-results">GET</button>
         </div>
+
+        <!-- NEW Search Panel -->
+        <div class="search-panel">
+            <h2>Search Sentences</h2>
+            <div class="input-group">
+                <label for="search-query">Search Query:</label>
+                <input type="text" id="search-query" name="search-query" placeholder="Enter search text...">
+            </div>
+            <div class="input-group">
+                <label for="search-limit">Result Limit:</label>
+                <input type="number" id="search-limit" name="search-limit" value="10" min="1" max="50">
+            </div>
+            <div id="search-results-visualization" class="search-results-visualization">
+                <!-- Search results will be rendered here -->
+                 -
+            </div>
+            <div id="search-info-box" class="info-box"></div>
+            <button id="search-request">Search</button>
+        </div>
+        <!-- END NEW Search Panel -->
+
     </main>
 
     <footer class="footer">

@@ -6,9 +6,11 @@ import jakarta.ws.rs.core.Cookie;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.NewCookie;
 import jakarta.ws.rs.core.Response;
-import org.acme.semsim.dto.ApiResponse;
+import org.acme.semsim.dto.GroupingApiResponse;
+import org.acme.semsim.dto.SearchApiResponse;
 import org.acme.semsim.service.SessionService;
 import org.acme.semsim.service.SimilarityProcessingService;
+import org.acme.semsim.service.SearchService;
 import org.jboss.logging.Logger;
 
 import java.nio.charset.StandardCharsets;
@@ -29,6 +31,9 @@ public class SimilarityResource {
 	@Inject
 	SessionService sessionService;
 
+	@Inject
+	SearchService searchService;
+
 	/**
 	 * Submit an XML document for processing with specific element names.
 	 *
@@ -46,7 +51,8 @@ public class SimilarityResource {
 	public Response apiSimilarity(
 			String xmlContent, 
 			@QueryParam("elements") @DefaultValue("p") String elements,
-			@QueryParam("threshold") Double threshold) {
+			@QueryParam("threshold") Double threshold,
+			@QueryParam ("search") String search) {
 		// We assume parameter elements is encoded, so we decode it
 		try {
 			elements = java.net.URLDecoder.decode(elements, StandardCharsets.UTF_8);
@@ -54,14 +60,14 @@ public class SimilarityResource {
 		catch (Exception e) {
 			LOG.error("Error decoding element names", e);
 			return Response.status(Response.Status.BAD_REQUEST)
-					.entity(new ApiResponse("Error processing request.", "URLDecoder.decode threw: " + e.getMessage(), null))
+					.entity(new GroupingApiResponse("Error processing request.", "URLDecoder.decode threw: " + e.getMessage(), null))
 					.build();
 		}
 		// We validate parameter elements
 		if (!elements.matches("^[a-zA-Z_][a-zA-Z0-9_-]*(\\s+[a-zA-Z_][a-zA-Z0-9_-]*)*$")) {
 			LOG.error("Validation error for elements parameter: " + elements);
 			return Response.status(Response.Status.BAD_REQUEST)
-					.entity(new ApiResponse("Elements parameter validation failed.", "Elements parameter should be a space separated string of valid XML elements." , null))
+					.entity(new GroupingApiResponse("Elements parameter validation failed.", "Elements parameter should be a space separated string of valid XML elements." , null))
 					.build();
 		}
 		
@@ -69,7 +75,7 @@ public class SimilarityResource {
 		if (threshold != null && (threshold < 0.0 || threshold > 1.0)) {
 			LOG.error("Validation error for threshold parameter: " + threshold);
 			return Response.status(Response.Status.BAD_REQUEST)
-					.entity(new ApiResponse("Threshold parameter validation failed.", "Threshold must be between 0.0 and 1.0." , null))
+					.entity(new GroupingApiResponse("Threshold parameter validation failed.", "Threshold must be between 0.0 and 1.0." , null))
 					.build();
 		}
 		
@@ -77,14 +83,13 @@ public class SimilarityResource {
 		if (xmlContent == null) {
 			LOG.warn("Received no xmlContent in request body");
 			return Response.status(Response.Status.BAD_REQUEST)
-					.entity(new ApiResponse("Error processing request.", "xmlContent was not provided in request body.", null))
+					.entity(new GroupingApiResponse("Error processing request.", "xmlContent was not provided in request body.", null))
 					.build();
 		}
 		if (xmlContent.trim().isEmpty()) {
 			LOG.warn("xmlContent in request body was the empty string");
 			return Response.status(Response.Status.BAD_REQUEST)
-					// TODO: Add a more specific error message, what is invalid about the XML?
-					.entity(new ApiResponse("Error processing request.", "XML content is empty or invalid", null))
+					.entity(new GroupingApiResponse("Error processing request.", "XML content is empty or invalid", null))
 					.build();
 		}
 		return createSimilarityGroups(xmlContent, elements, threshold);
@@ -102,7 +107,7 @@ public class SimilarityResource {
 			// Return 202 Accepted with session ID in both cookie and body
 			return Response.status(Response.Status.ACCEPTED)
 					.cookie(sessionCookie)
-					.entity(new ApiResponse(
+					.entity(new GroupingApiResponse(
 							"Processing started. Results will be available for this session.",
 							sessionCookie.getValue()))
 					.build();
@@ -122,9 +127,68 @@ public class SimilarityResource {
 			}
 			LOG.error(errorDetails.toString());
 			return Response.status(Response.Status.INTERNAL_SERVER_ERROR)
-					.entity(new ApiResponse(null, "Internal Server Error: " + e.getClass().getSimpleName() + ": " + e.getMessage(), null))
+					.entity(new GroupingApiResponse(null, "Internal Server Error: " + e.getClass().getSimpleName() + ": " + e.getMessage(), null))
 					.build();
 		}
+	}
+
+	/**
+	 * Endpoint to perform search on existing session data.
+	 * @param sessionCookie Session cookie containing the session ID
+	 * @param searchQuery The search query string
+	 * @return Response with search results or status
+	 */
+	@GET
+	@Path("/search")
+	@Produces(MediaType.APPLICATION_JSON)
+	public Response apiPerformSearch(
+			@CookieParam(SimilarityProcessingService.SESSION_COOKIE_NAME) Cookie sessionCookie,
+			@QueryParam("search") String searchQuery,
+			@QueryParam("limit") @DefaultValue("10") int limit) {
+
+		// Validate session and status using the helper method
+		Response validationResponse = validateSessionAndStatus(sessionCookie, LOG, sessionService);
+		if (validationResponse != null) {
+			// If validation fails or status is not COMPLETED, return the response from the helper
+			return validationResponse;
+		}
+
+		// Validation passed, session is valid and processing is COMPLETED.
+		String sessionId = sessionCookie.getValue(); // We know cookie and value are not null/empty here
+
+		// Validate search query parameter
+		if (searchQuery == null || searchQuery.trim().isEmpty()) {
+			LOG.warn("Search query parameter was missing or empty for session: " + sessionId);
+			return Response.status(Response.Status.BAD_REQUEST)
+					.entity(new SearchApiResponse(null, "Search query parameter 'search' is required.", sessionId, null))
+					.build();
+		}
+
+		// Proceed with search logic
+		try {
+			return executeSearch(sessionId, searchQuery.trim(), limit);
+		} catch (Exception e) {
+			LOG.error("Error during search execution for session: " + sessionId, e);
+			return Response.status(Response.Status.INTERNAL_SERVER_ERROR)
+					.entity(new SearchApiResponse(null, "Internal server error during search: " + e.getMessage(), sessionId, null))
+					.build();
+		}
+	}
+
+	/**
+	 * Internal method to execute the search logic.
+	 * @param sessionId The validated session ID
+	 * @param searchQuery The search query
+	 * @return Response with search results
+	 */
+	private Response executeSearch(String sessionId, String searchQuery, int limit) {
+		// Use the SearchService to find similar sentences
+		List<SearchService.SearchResult> searchResults = searchService.searchSimilarSentences(sessionId, searchQuery, limit);
+
+		// Wrap the results in an SearchApiResponse
+		return Response.ok()
+				.entity(new SearchApiResponse("Search completed for query: " + searchQuery, null, sessionId, searchResults))
+				.build();
 	}
 
 	/**
@@ -132,6 +196,96 @@ public class SimilarityResource {
 	 */
 	private Response createSimilarityGroups(String xmlContent, String elementNames) {
 		return createSimilarityGroups(xmlContent, elementNames, null);
+	}
+
+	/**
+	 * Validates the session cookie and processing status.
+	 * Returns a Response object if validation fails or processing is not complete,
+	 * otherwise returns null.
+	 * @param sessionCookie The session cookie
+	 * @param LOG The logger instance
+	 * @param sessionService The session service instance
+	 * @return A Response object or null
+	 */
+	private Response validateSessionAndStatus(Cookie sessionCookie, Logger LOG, SessionService sessionService) {
+		if (sessionCookie == null) {
+			LOG.warn("Session cookie was null");
+			return Response.status(Response.Status.BAD_REQUEST)
+					.entity(new GroupingApiResponse(null, "Session cookie was never sent.", null))
+					.build();
+		}
+		LOG.info("Session cookie received with value: " + sessionCookie.getValue());
+
+		String sessionId = sessionCookie.getValue();
+
+		if (sessionId.isEmpty()) {
+			LOG.warn("Session cookie's value was an empty string");
+			return Response.status(Response.Status.BAD_REQUEST)
+					.entity(new GroupingApiResponse(null, "Session cookie's value was an empty string", null))
+					.build();
+		}
+
+		// Validate session ID as UUID
+		try {
+			UUID.fromString(sessionId);
+		} catch (IllegalArgumentException e) {
+			LOG.warn("Session ID was not in UUID format: " + sessionId);
+			return Response.status(Response.Status.BAD_REQUEST)
+					.entity(new GroupingApiResponse(null, "Invalid session ID, not UUID format.", sessionId))
+					.build();
+		}
+
+		// Get session
+		org.acme.semsim.model.SessionData sessionData = sessionService.getSession(sessionId);
+
+		// If no session found, return 404 Not Found
+		if (sessionData == null) {
+			LOG.info("No session found for ID: " + sessionId);
+			return Response.status(Response.Status.NOT_FOUND)
+					.entity(new GroupingApiResponse(null, "No session found for ID: " + sessionId, null))
+					.build();
+		}
+
+		// Check processing status
+		org.acme.semsim.model.SessionData.ProcessingStatus status = sessionData.getProcessingStatus();
+		Response.Status responseStatus;
+		String message = null;
+		String error = null;
+
+		switch (status) {
+			case PROCESSING -> {
+				LOG.info("Processing still in progress for session: " + sessionId);
+				responseStatus = Response.Status.ACCEPTED;
+				message = "Processing in progress. Please try again later.";
+			}
+			case ERROR -> {
+				LOG.warn("An error occurred during processing for session: " + sessionId);
+				responseStatus = Response.Status.INTERNAL_SERVER_ERROR;
+				message = "An error occurred during processing.";
+			}
+			case NO_TEXT_EXTRACTED -> {
+				responseStatus = Response.Status.BAD_REQUEST;
+				message = "No embeddings were generated. This may be because no matching elements were found in your XML. " +
+						"The default element is 'p'. If your XML uses different elements, please specify them using the 'elements' query parameter, " +
+						"for example: /api/similarity?elements=paragraph";
+				error = "No sentences found in XML. Revise elements query parameter or check data.";
+			}
+			case COMPLETED -> {
+				// Processing is complete, validation passes for status check.
+				return null; // Indicate success
+			}
+			default -> {
+				// This case should technically not be reachable if COMPLETED is handled
+				LOG.error("Unexpected processing status encountered: " + status + " for session: " + sessionId);
+				responseStatus = Response.Status.INTERNAL_SERVER_ERROR;
+				message = "Unexpected server state.";
+				error = "Unexpected processing status: " + status;
+			}
+		}
+		// If status was not COMPLETED, return the corresponding response
+		return Response.status(responseStatus)
+				.entity(new GroupingApiResponse(message, error, sessionId))
+				.build();
 	}
 
 	/**
@@ -146,121 +300,57 @@ public class SimilarityResource {
 	@Produces(MediaType.APPLICATION_JSON)
 	public Response apiSimilarityResults(@CookieParam(SimilarityProcessingService.SESSION_COOKIE_NAME) Cookie sessionCookie) {
 		try {
-			if (sessionCookie == null) {
-				LOG.warn("/results was requested but Session cookie was null");
-				return Response.status(Response.Status.BAD_REQUEST)
-						.entity(new ApiResponse(null,"Session cookie was never sent.", null))
-						.build();
-			}
-			LOG.info("/results was requested with sessionid: " + sessionCookie.getValue());
-
-			String sessionId = sessionCookie.getValue();
-
-			if (sessionId.isEmpty()) {
-				LOG.warn("Session cookie's value was an empty string");
-				return Response.status(Response.Status.BAD_REQUEST)
-						.entity(new ApiResponse(null,"Session cookie's value was an empty string", null))
-						.build();
+			// Validate session and status using the helper method
+			Response validationResponse = validateSessionAndStatus(sessionCookie, LOG, sessionService);
+			if (validationResponse != null) {
+				// If validation fails or status is not COMPLETED, return the response from the helper
+				return validationResponse;
 			}
 
-			// Validate session ID as UUID
-			try {
-				UUID uuid = UUID.fromString(sessionId);
-				// Valid UUID format
-				// Process the session
-			} catch (IllegalArgumentException e) {
-				LOG.warn("Session ID was not in UUID format: " + sessionId);
-				return Response.status(Response.Status.BAD_REQUEST)
-						.entity(new ApiResponse(null,"Invalid session ID, not UUID format.", sessionId))
-						.build();
-			}
+			// Validation passed, session is valid and processing is COMPLETED.
+			String sessionId = sessionCookie.getValue(); // We know cookie and value are not null/empty here
 
-			// Get session
+			// Get session data again (since helper only checks status)
 			org.acme.semsim.model.SessionData sessionData = sessionService.getSession(sessionId);
 
-			// If no session found, return 404 Not Found
-			if (sessionData == null) {
-				LOG.info("No session found for ID: " + sessionId);
-				return Response.status(Response.Status.NOT_FOUND)
-						.entity(new ApiResponse(null,"No session found for ID: " + sessionId, null))
+			// We already know sessionData is not null and status is COMPLETED from the helper method.
+			// However, we log a warning if something unexpected happens (should not occur).
+			if (sessionData == null || sessionData.getProcessingStatus() != org.acme.semsim.model.SessionData.ProcessingStatus.COMPLETED) {
+				LOG.error("Unexpected state: Session data null or status not COMPLETED after validation for session: " + sessionId);
+				return Response.status(Response.Status.INTERNAL_SERVER_ERROR)
+						.entity(new GroupingApiResponse(null, "Internal Server Error: Unexpected state after validation.", sessionId))
 						.build();
 			}
 
-			// Check processing status
-			org.acme.semsim.model.SessionData.ProcessingStatus status = sessionData.getProcessingStatus();
-
-			// Handle cases based on processing status
-			Response.Status responseStatus;
-			String message = null;
-			String error = null;
-
-			switch (status) {
-			    case PROCESSING -> {
-			        LOG.info("A results request was made but processing was still in progress for session: " + sessionId);
-			        responseStatus = Response.Status.ACCEPTED;
-			        message = "Processing in progress. Please try again later.";
-			    }
-			    case ERROR -> {
-			        LOG.warn("A results request was made but an error had occurred during processing for session: " + sessionId);
-			        responseStatus = Response.Status.INTERNAL_SERVER_ERROR;
-			        message = "An error occurred during processing.";
-			    }
-			    case NO_TEXT_EXTRACTED -> {
-			        responseStatus = Response.Status.BAD_REQUEST;
-			        message = "No embeddings were generated. This may be because no matching elements were found in your XML. " +
-			                "The default element is 'p'. If your XML uses different elements, please specify them using the 'elements' query parameter, " +
-			                "for example: /api/similarity?elements=paragraph";
-			        error = "No sentences found in XML. Revise elements query parameter or check data.";
-			    }
-				// Assume COMPLETED will always be the default case
-				default -> {
-					// Log a warning if the status is not COMPLETED
-					if (status != org.acme.semsim.model.SessionData.ProcessingStatus.COMPLETED) {
-						LOG.warn("Unexpected processing status! Should have been COMPLETED but was: " + status);
-					}
-					responseStatus = Response.Status.OK;
-				}
-			}
-
-			// Return if not completed
-			if (responseStatus != Response.Status.OK) {
-				return Response.status(responseStatus)
-						.entity(new ApiResponse(message, error, sessionId))
-						.build();
-			}
-
-			// Continue with normal processing
+			// Continue with normal processing for COMPLETED status
 			List<List<String>> similarityGroups = sessionData.getSimilaritySentenceGroups();
+			String message;
+			String error = null; // Error should be null in the OK case
 
 			if (similarityGroups == null) {
-				LOG.warn("Unexpected error! Similarity groups was null for " + sessionId);;
-			}
-
-
-			if (message != null) {
-				LOG.warn("The message was not null, but the status was OK. This should not happen.");
-				LOG.warn("Message (that should have been null): " + message);
-				error = "The message was not null, but the status was OK. This should not happen.";
-				return Response.status(Response.Status.INTERNAL_SERVER_ERROR)
-						.entity(new ApiResponse(message, error, sessionId))
-						.build();
-			} else if (similarityGroups == null || similarityGroups.isEmpty()) {
-				LOG.info("Processing completed but no similarity groups were created for this session: " + sessionId);
+				// This case might indicate an issue during the final storage phase, even if status is COMPLETED.
+				LOG.warn("Processing status COMPLETED but similarity groups is null for session: " + sessionId);
+				message = "Processing completed, but encountered an issue retrieving similarity groups.";
+				// Optionally set a different response status like NO_CONTENT or keep OK with a specific message.
+				// For now, keeping OK but providing an informative message.
+                // Consider if returning an error status is more appropriate here.
+			} else if (similarityGroups.isEmpty()) {
+				LOG.info("Processing completed but no similarity groups were created for session: " + sessionId);
 				message = "Processing completed but no similarity groups were created for this session.";
 			} else {
 				LOG.info("Returning " + similarityGroups.size() + " similarity groups for session: " + sessionId);
 				message = "Processing completed. Similarity groups are available.";
 			}
 
-			// Return the ok response with status and message and the similarityGroups
+			// Return the OK response with status, message, and the similarityGroups
 			return Response.ok()
-					.entity(new ApiResponse(message, error, sessionId, similarityGroups))
+					.entity(new GroupingApiResponse(message, error, sessionId, similarityGroups))
 					.build();
 
 		} catch (Exception e) {
 			LOG.error("Error retrieving similarity results", e);
 			return Response.status(Response.Status.INTERNAL_SERVER_ERROR)
-					.entity(new ApiResponse(e.getMessage(), null))
+					.entity(new GroupingApiResponse(e.getMessage(), null))
 					.build();
 		}
 	}

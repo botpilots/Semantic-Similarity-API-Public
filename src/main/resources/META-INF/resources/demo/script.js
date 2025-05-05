@@ -12,6 +12,13 @@ document.addEventListener('DOMContentLoaded', () => {
     const groupVisualizationContainer = document.getElementById('group-visualization');
     const postInfoBox = document.getElementById('post-info-box');
     const getInfoBox = document.getElementById('get-info-box');
+    // --- Search Panel Selectors (NEW) ---
+    const searchQueryInput = document.getElementById('search-query');
+    const searchLimitInput = document.getElementById('search-limit');
+    const searchResultsContainer = document.getElementById('search-results-visualization');
+    const searchInfoBox = document.getElementById('search-info-box');
+    const searchRequestBtn = document.getElementById('search-request');
+    // -------------------------------------
 
     // --- Update threshold value display when slider changes ---
     similarityThresholdInput.addEventListener('input', () => {
@@ -253,6 +260,105 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
+    // --- NEW Search Request Handler ---
+    async function handleSearchRequest() {
+        updateInfoBox(searchInfoBox, 'Preparing search request...');
+        clearSearchResults(); // Clear previous results
+
+        const query = searchQueryInput.value.trim();
+        const limit = parseInt(searchLimitInput.value, 10);
+
+        if (!query) {
+            console.warn("Search request attempted without a query.");
+            updateInfoBox(searchInfoBox, "Please enter a search query.", 'error');
+            return;
+        }
+        if (isNaN(limit) || limit < 1) {
+            console.warn("Search request attempted with invalid limit.");
+            updateInfoBox(searchInfoBox, "Please enter a valid positive number for the limit.", 'error');
+            return;
+        }
+
+        // Encode the query parameter
+        const encodedQuery = encodeURIComponent(query);
+        const apiUrl = `/api/similarity/search?search=${encodedQuery}&limit=${limit}`; // Use relative path
+
+        console.log(`SEARCH: Sending request to ${apiUrl}`);
+        updateInfoBox(searchInfoBox, "Sending search request...");
+
+        try {
+            const response = await fetch(apiUrl, {
+                method: 'GET',
+            });
+
+            const responseText = await response.text(); // Get raw response text
+            let message = '';
+            let type = 'info'; // Default type
+
+            console.log("Search Response:", {
+                status: response.status,
+                statusText: response.statusText,
+                body: responseText
+            });
+
+            if (response.ok) {
+                type = 'success'; // Assume success initially
+                try {
+                    const apiResponse = JSON.parse(responseText);
+                    console.log("Parsed Search API Response:", apiResponse);
+
+                    // Check for searchResults (adjust if backend DTO uses 'data')
+                    if (apiResponse && Array.isArray(apiResponse.searchResults)) {
+                        if (apiResponse.searchResults.length > 0) {
+                            displaySearchResults(apiResponse.searchResults);
+                            message = apiResponse.message || `Search OK (${response.status}): ${apiResponse.searchResults.length} results found.`;
+                        } else {
+                            message = apiResponse.message || `Search OK (${response.status}): No matching sentences found.`;
+                            clearSearchResults(false); // Clear but keep placeholder
+                        }
+                    } else if (apiResponse && Array.isArray(apiResponse.data)) { // Check 'data' field as fallback
+                         if (apiResponse.data.length > 0) {
+                            displaySearchResults(apiResponse.data); // Assume data contains SearchResult objects
+                            message = apiResponse.message || `Search OK (${response.status}): ${apiResponse.data.length} results found.`;
+                        } else {
+                            message = apiResponse.message || `Search OK (${response.status}): No matching sentences found.`;
+                            clearSearchResults(false);
+                        }
+                    } else {
+                         // No suitable results array found
+                         if (apiResponse.error) {
+                             type = 'error';
+                             message = apiResponse.error;
+                         } else {
+                             message = apiResponse.message || `Search OK (${response.status}): Response received, but no 'searchResults' or 'data' array found.`;
+                         }
+                         clearSearchResults(false);
+                     }
+                } catch (parseError) {
+                    console.error("Failed to parse Search response JSON:", parseError);
+                    message = responseText.trim() || `Search OK (${response.status}): Success (non-JSON response).`;
+                    type = 'success'; // Still success if response.ok
+                    clearSearchResults(false);
+                }
+            } else {
+                type = 'error';
+                clearSearchResults(); // Clear on error
+                try {
+                    const apiResponse = JSON.parse(responseText);
+                    message = apiResponse.error || apiResponse.message || `Search Error (${response.status}): ${response.statusText}`;
+                } catch (parseError) {
+                    message = responseText.trim() || `Search Error (${response.status}): ${response.statusText}`;
+                }
+            }
+            updateInfoBox(searchInfoBox, message, type);
+
+        } catch (error) {
+            console.error("Search Network Error:", error);
+            clearSearchResults();
+            updateInfoBox(searchInfoBox, `Network Error: ${error.message}`, 'error');
+        }
+    }
+
     // --- Utility Functions (REMOVED logToConsole) ---
     // logToConsole function removed.
     // Info boxes and console logging are used instead.
@@ -365,19 +471,68 @@ document.addEventListener('DOMContentLoaded', () => {
         console.log("Group visualization cleared.");
     }
 
+    // --- Function to display search results (NEW) ---
+    function displaySearchResults(results) {
+        searchResultsContainer.innerHTML = ''; // Clear previous results
+
+        if (!results || results.length === 0) {
+            searchResultsContainer.textContent = "No results to display.";
+            console.log("No search results to visualize.");
+            return;
+        }
+
+        console.log(`Displaying ${results.length} search results.`);
+
+        results.forEach((result, index) => {
+            if (!result || !result.sentence) {
+                console.warn(`Skipping invalid search result at index ${index}:`, result);
+                return;
+            }
+
+            const itemDiv = document.createElement('div');
+            itemDiv.classList.add('search-result-item');
+
+            const scoreSpan = document.createElement('span');
+            scoreSpan.classList.add('search-result-score');
+            // Format score to 3 decimal places
+            scoreSpan.textContent = `Score: ${result.similarityScore !== undefined ? result.similarityScore.toFixed(3) : 'N/A'}`;
+
+            const textSpan = document.createElement('span');
+            textSpan.classList.add('search-result-text');
+            textSpan.textContent = result.sentence.text || '[No text]'; // Access the text within the sentence object
+
+            itemDiv.appendChild(scoreSpan); // Add score first so text flows around it
+            itemDiv.appendChild(textSpan);
+
+            searchResultsContainer.appendChild(itemDiv);
+        });
+    }
+
+    // --- Function to Clear Search Results (NEW) ---
+    function clearSearchResults(showPlaceholder = true) {
+        searchResultsContainer.innerHTML = ''; // Clear content
+        if (showPlaceholder) {
+             searchResultsContainer.textContent = "-"; // Placeholder
+        }
+        console.log("Search results cleared.");
+    }
+
     // --- UPDATED Event Listeners ---
     loadSmallBtn.addEventListener('click', () => handleLoadSample(sampleSmallUrl));
     loadMediumBtn.addEventListener('click', () => handleLoadSample(sampleMediumUrl));
     loadLargeBtn.addEventListener('click', () => handleLoadSample(sampleLargeUrl));
     postRequestBtn.addEventListener('click', handlePostRequest);
     getResultsBtn.addEventListener('click', handleGetRequest);
+    searchRequestBtn.addEventListener('click', handleSearchRequest); // Add listener for search
 
     // --- Initial State --- 
     clearGroupVisualization(); // Clear visualization on load
+    clearSearchResults(); // Clear search results on load
     xmlInputViewer.textContent = "Click 'Small', 'Medium', or 'Large' to load sample XML."; // Initial placeholder
 
     // Set initial info box states
     updateInfoBox(postInfoBox); // Show default placeholder
     updateInfoBox(getInfoBox); // Show default placeholder
+    updateInfoBox(searchInfoBox); // Show default placeholder for search
 
 }); 

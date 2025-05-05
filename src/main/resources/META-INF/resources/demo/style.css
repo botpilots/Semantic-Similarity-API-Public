@@ -53,8 +53,8 @@ body, html {
     border-radius: 8px;
     box-shadow: 0 2px 5px rgba(0,0,0,0.05);
     display: flex;
-    flex-direction: column; /* Stack elements vertically */
-    overflow-y: hidden; /* Prevent panel itself from scrolling */
+    flex-direction: column;
+    overflow-y: auto; /* Allow this panel to scroll if needed */
 }
 
 /* Right Panel (Now Endpoints) */
@@ -81,22 +81,36 @@ body, html {
     overflow-y: auto; /* Allow this panel to scroll if needed */
 }
 
+/* Search Panel Styles (NEW) */
+.search-panel {
+    flex: 1; /* Make equal width */
+    padding: 1.5rem;
+    background-color: #ffffff;
+    border-radius: 8px;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+    display: flex;
+    flex-direction: column;
+    overflow-y: auto; /* Allow this panel to scroll if needed */
+}
+
 /* Consistent Panel Elements Styling */
-.left-panel > *, .latest-group-panel > * {
+.left-panel > *, .latest-group-panel > *, .search-panel > * {
     margin-bottom: 1rem;
 }
 
-.left-panel > *:last-child, .latest-group-panel > *:last-child {
+.left-panel > *:last-child, .latest-group-panel > *:last-child, .search-panel > *:last-child {
     margin-bottom: 0;
 }
 
-.left-panel h2, .latest-group-panel h2 {
+.left-panel h2, .latest-group-panel h2, .search-panel h2 {
     margin-top: 0;
     color: #2c5282;
     border-bottom: 1px solid #e2e8f0;
     padding-bottom: 0.5rem;
     margin-bottom: 1rem;
     flex-shrink: 0;
+    cursor: pointer; /* Show pointer cursor to indicate interactivity */
+    /* Height will be set by JS in pixels */
 }
 
 /* Group Visualization Styles */
@@ -410,7 +424,8 @@ button:active {
     
     /* Adjust panel styles for mobile */
     .left-panel, 
-    .latest-group-panel {
+    .latest-group-panel,
+    .search-panel {
         flex: none; /* Don't use flex sizing */
         width: auto; /* Let it fill container */
         margin-bottom: 1rem;
@@ -425,10 +440,11 @@ button:active {
     }
     
     /* Ensure group visualization has appropriate size */
-    .group-visualization {
-        height: 250px; /* Fixed height for visualization */
+    .group-visualization,
+    .search-results-visualization { /* Add search results */
+        height: 250px; /* Fixed height */
         min-height: 0; /* Override any minimum height */
-        overflow-x: hidden; /* Prevent horizontal scrolling */
+        overflow-y: auto; /* Ensure scrollbars */
     }
     
     /* Ensure columns maintain 70% height limit on mobile */
@@ -447,4 +463,62 @@ button:active {
     .footer {
         margin-top: auto;
     }
+} 
+
+/* Search Results Visualization Styles (NEW) */
+.search-results-visualization {
+    flex-grow: 1;
+    padding: 0.5rem 1rem; /* Add some padding */
+    border: 1px solid #e2e8f0;
+    border-radius: 5px;
+    background-color: #f8f9fa; /* Light background for the results area */
+    margin-bottom: 1rem;
+    min-height: 150px; /* Ensure minimum height, same as group viz */
+    overflow-y: auto; /* Allow scrolling for results */
+    font-size: 0.8rem; /* Slightly smaller font for results */
+}
+
+.search-result-item {
+    border-bottom: 1px solid #e2e8f0;
+    padding: 0.75rem 0.5rem;
+    margin-bottom: 0.5rem;
+    background-color: #fff;
+    border-radius: 3px;
+    box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+}
+
+.search-result-item:last-child {
+    border-bottom: none;
+    margin-bottom: 0;
+}
+
+.search-result-score {
+    font-weight: bold;
+    color: #3182ce;
+    float: right; /* Align score to the right */
+    margin-left: 1rem;
+}
+
+.search-result-text {
+    color: #4a5568;
+}
+
+/* Input number styling */
+.input-group input[type="number"] {
+    width: 60px; /* Smaller width for number input */
+    padding: 0.75rem;
+    border: 1px solid #cbd5e0;
+    border-radius: 5px;
+    font-size: 0.95rem;
+    font-family: "Ubuntu", sans-serif;
+    background-color: #f8f9fa;
+    box-sizing: border-box;
+    transition: border-color 0.2s ease, box-shadow 0.2s ease;
+    margin-left: 10px; /* Add some space next to the label */
+}
+
+.input-group input[type="number"]:focus {
+    outline: none;
+    border-color: #3182ce;
+    box-shadow: 0 0 0 2px rgba(49, 130, 206, 0.2);
 } 

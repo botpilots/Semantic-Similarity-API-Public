@@ -3,10 +3,8 @@ package org.acme.semsim;
 import static io.restassured.RestAssured.given;
 
 import java.util.List;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
-import org.acme.semsim.dto.ApiResponse;
+import org.acme.semsim.dto.GroupingApiResponse;
 
 import io.quarkus.logging.Log;
 import io.restassured.response.Response;
@@ -62,7 +60,7 @@ public class TestUtils {
 	 */
 	// NOTE: Will break test if similarityGroups data structure changes.
 	public static int getParagraphCount(Response response) {
-		ApiResponse apiResponse = response.getBody().as(ApiResponse.class);
+		GroupingApiResponse apiResponse = response.getBody().as(GroupingApiResponse.class);
 		List<List<String>> similarityGroups = apiResponse.getSimilarityGroups();
 		if (similarityGroups == null) {
 			return 0;
